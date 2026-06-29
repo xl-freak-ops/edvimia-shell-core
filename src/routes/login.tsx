@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { dashboardPathFor, primaryRole } from "@/lib/auth/roles";
+import { dashboardPathFor, primaryRole, type AppRole } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in · Edvimia" }] }),
@@ -67,8 +67,8 @@ function LoginPage() {
           .from("user_roles")
           .select("role")
           .eq("user_id", u.user.id);
-        const roles = (rows ?? []).map((r: { role: string }) => r.role) as ReturnType<typeof primaryRole> extends infer T ? Exclude<T, null>[] : never;
-        const target = primaryRole(roles as never) ?? "student";
+        const roles = ((rows ?? []) as { role: AppRole }[]).map((r) => r.role);
+        const target: AppRole = primaryRole(roles) ?? "student";
         toast.success("Welcome back");
         await router.invalidate();
         navigate({ to: dashboardPathFor(target) });
