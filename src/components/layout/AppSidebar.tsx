@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -28,9 +28,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { primaryRole, ROLE_SLUG } from "@/lib/auth/roles";
 
-const mainNav = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+const baseNav = (dashboardUrl: string) => [
+  { title: "Dashboard", url: dashboardUrl, icon: LayoutDashboard },
   { title: "Students", url: "/students", icon: GraduationCap },
   { title: "Teachers", url: "/teachers", icon: Users },
   { title: "Attendance", url: "/attendance", icon: CalendarCheck2 },
@@ -45,17 +47,17 @@ const intelligenceNav = [
   { title: "Edvi · AI Assistant", url: "/ai", icon: Sparkles, badge: "New" },
 ];
 
-const systemNav = [
-  { title: "Settings", url: "/settings", icon: Settings },
-  { title: "Logout", url: "/logout", icon: LogOut },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { roles, signOut } = useAuth();
+  const role = primaryRole(roles);
+  const dashboardUrl = role ? `/dashboard/${ROLE_SLUG[role]}` : "/";
+  const mainNav = baseNav(dashboardUrl);
   const isActive = (url: string) =>
-    url === "/" ? pathname === "/" : pathname.startsWith(url);
+    pathname === url || pathname.startsWith(url + "/");
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -152,21 +154,29 @@ export function AppSidebar() {
           )}
           <SidebarGroupContent>
             <SidebarMenu>
-              {systemNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                    className="h-9 rounded-lg font-medium transition-all hover:bg-sidebar-accent data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
-                  >
-                    <Link to={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/settings")}
+                  tooltip="Settings"
+                  className="h-9 rounded-lg font-medium transition-all hover:bg-sidebar-accent data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
+                >
+                  <Link to="/settings"><Settings className="h-4 w-4" /><span>Settings</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Logout"
+                  onClick={async () => {
+                    await signOut();
+                    navigate({ to: "/login" });
+                  }}
+                  className="h-9 rounded-lg font-medium transition-all hover:bg-sidebar-accent text-destructive hover:text-destructive"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
