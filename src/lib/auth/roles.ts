@@ -54,3 +54,8 @@ export function primaryRole(roles: AppRole[]): AppRole | null {
 export function dashboardPathFor(role: AppRole): string {
   return `/dashboard/${ROLE_SLUG[role]}`;
 }
+
+// Typed helper for TanStack Navigate / navigate({ to, params })
+export function dashboardRouteFor(role: AppRole): { to: "/dashboard/$role"; params: { role: string } } {
+  return { to: "/dashboard/$role", params: { role: ROLE_SLUG[role] } };
+}

@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { dashboardPathFor, primaryRole } from "@/lib/auth/roles";
+import { dashboardRouteFor, primaryRole } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/")({
   // Auth state lives in localStorage — render client-side to choose the redirect.
@@ -26,5 +26,7 @@ function IndexPage() {
   }
   if (!userId) return <Navigate to="/welcome" />;
   const r = primaryRole(roles);
-  return <Navigate to={r ? dashboardPathFor(r) : "/access-denied"} />;
+  if (!r) return <Navigate to="/access-denied" />;
+  const { to, params } = dashboardRouteFor(r);
+  return <Navigate to={to} params={params} />;
 }

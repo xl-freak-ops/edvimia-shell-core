@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { dashboardPathFor } from "@/lib/auth/roles";
+import { dashboardRouteFor } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Create your school account · Edvimia" }] }),
@@ -157,7 +157,10 @@ function SignupPage() {
 
       await refresh();
       toast.success("School account created", { description: "Welcome to Edvimia." });
-      navigate({ to: dashboardPathFor("school_admin") });
+      {
+        const { to, params } = dashboardRouteFor("school_admin");
+        navigate({ to, params });
+      }
     } finally {
       setLoading(false);
     }

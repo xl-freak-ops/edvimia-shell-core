@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { dashboardPathFor, primaryRole } from "@/lib/auth/roles";
+import { primaryRole, ROLE_SLUG } from "@/lib/auth/roles";
 
 const baseNav = (dashboardUrl: string) => [
   { title: "Dashboard", url: dashboardUrl, icon: LayoutDashboard },
@@ -54,7 +54,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { roles, signOut } = useAuth();
   const role = primaryRole(roles);
-  const dashboardUrl = role ? dashboardPathFor(role) : "/";
+  const dashboardUrl = role ? `/dashboard/${ROLE_SLUG[role]}` : "/";
   const mainNav = baseNav(dashboardUrl);
   const isActive = (url: string) =>
     pathname === url || pathname.startsWith(url + "/");
