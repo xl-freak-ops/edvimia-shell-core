@@ -41,16 +41,18 @@ export function AttendanceChart() {
           {data.map((d) => {
             const total = d.present + d.absent || 1;
             return (
-              <div key={d.day} className="group flex flex-1 flex-col items-center gap-2">
-                <div className="relative flex h-full w-full max-w-[44px] flex-col justify-end overflow-hidden rounded-lg bg-muted/50 transition-colors group-hover:bg-muted">
+              <div key={d.day} className="group flex h-full flex-1 flex-col items-center gap-2">
+                <div className="relative flex h-full w-full max-w-[44px] items-end justify-center overflow-hidden rounded-lg bg-muted/40 transition-colors group-hover:bg-muted/70">
                   <div
-                    className="absolute inset-x-0 bottom-0 bg-muted-foreground/25"
-                    style={{ height: `${(d.absent / total) * 100}%` }}
-                  />
-                  <div
-                    className="relative rounded-b-lg bg-gradient-to-t from-primary to-primary/70 transition-all"
+                    className="w-full rounded-lg bg-gradient-to-t from-primary to-primary/70 transition-all duration-500"
                     style={{ height: `${d.present}%` }}
                   />
+                  {d.absent > 0 && (
+                    <div
+                      className="absolute inset-x-0 top-0 w-full bg-muted-foreground/20"
+                      style={{ height: `${100 - d.present}%` }}
+                    />
+                  )}
                 </div>
                 <span className="text-[11px] font-medium text-muted-foreground">{d.day}</span>
               </div>
