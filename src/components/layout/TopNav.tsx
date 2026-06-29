@@ -1,4 +1,5 @@
-import { Bell, Search, Moon, Sun, Plus, ChevronDown, Check } from "lucide-react";
+import { Bell, Search, Moon, Sun, Plus, ChevronDown, Check, LogOut, User, Settings as SettingsIcon } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,16 +14,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/components/theme-provider";
-
-const schools = [
-  { id: "1", name: "Greenfield Academy", initial: "GA", active: true },
-  { id: "2", name: "Riverside International", initial: "RI", active: false },
-  { id: "3", name: "Northgate Primary", initial: "NP", active: false },
-];
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { ROLE_LABEL, primaryRole } from "@/lib/auth/roles";
 
 export function TopNav() {
   const { theme, toggle } = useTheme();
-  const activeSchool = schools.find((s) => s.active)!;
+  const navigate = useNavigate();
+  const { profile, email, school, roles, signOut } = useAuth();
+  const role = primaryRole(roles);
+  const initials =
+    (profile?.full_name ?? email ?? "U")
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("") || "U";
+  const schoolInitial = (school?.name ?? "E").slice(0, 2).toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border/70 bg-background/80 px-3 backdrop-blur-xl sm:px-6">
@@ -38,29 +44,23 @@ export function TopNav() {
             className="hidden h-9 gap-2 rounded-lg px-2.5 font-medium hover:bg-accent sm:flex"
           >
             <span className="grid h-6 w-6 place-items-center rounded-md bg-primary text-[10px] font-bold text-primary-foreground">
-              {activeSchool.initial}
+              {schoolInitial}
             </span>
-            <span className="max-w-[160px] truncate text-sm">{activeSchool.name}</span>
+            <span className="max-w-[160px] truncate text-sm">{school?.name ?? "Edvimia"}</span>
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <DropdownMenuLabel className="text-xs text-muted-foreground">
-            Switch school
+            Your school
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {schools.map((s) => (
-            <DropdownMenuItem key={s.id} className="gap-2.5 py-2">
-              <span className="grid h-7 w-7 place-items-center rounded-md bg-muted text-[10px] font-bold">
-                {s.initial}
-              </span>
-              <span className="flex-1 text-sm font-medium">{s.name}</span>
-              {s.active && <Check className="h-4 w-4 text-primary" />}
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="gap-2 text-sm text-muted-foreground">
-            <Plus className="h-4 w-4" /> Add new school
+          <DropdownMenuItem className="gap-2.5 py-2">
+            <span className="grid h-7 w-7 place-items-center rounded-md bg-muted text-[10px] font-bold">
+              {schoolInitial}
+            </span>
+            <span className="flex-1 text-sm font-medium">{school?.name ?? "No school assigned"}</span>
+            <Check className="h-4 w-4 text-primary" />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -137,28 +137,40 @@ export function TopNav() {
             <Button variant="ghost" className="h-9 gap-2 rounded-lg px-1.5 pr-2 hover:bg-accent">
               <Avatar className="h-7 w-7">
                 <AvatarFallback className="bg-gradient-to-br from-primary to-accent-brand text-[11px] font-semibold text-primary-foreground">
-                  AO
+                  {initials}
                 </AvatarFallback>
               </Avatar>
               <span className="hidden text-sm font-medium leading-none lg:inline">
-                Adaora O.
+                {profile?.full_name ?? email ?? "Account"}
               </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="flex flex-col gap-0.5">
-              <span className="text-sm font-semibold">Adaora Okoye</span>
-              <span className="text-xs font-normal text-muted-foreground">
-                adaora@greenfield.edu
-              </span>
+              <span className="text-sm font-semibold">{profile?.full_name ?? "Account"}</span>
+              <span className="text-xs font-normal text-muted-foreground">{email}</span>
+              {role && (
+                <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  {ROLE_LABEL[role]}
+                </span>
+              )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Account settings</DropdownMenuItem>
-            <DropdownMenuItem>Billing</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/profile"><User className="h-4 w-4" /> Profile</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings"><SettingsIcon className="h-4 w-4" /> Settings</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive focus:text-destructive">
-              Sign out
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={async () => {
+                await signOut();
+                navigate({ to: "/login" });
+              }}
+            >
+              <LogOut className="h-4 w-4" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
