@@ -71,7 +71,7 @@
   --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --shadow-soft: 0 1px 2px 0 oklch(0 0 0 / 0.04), 0 1px 3px 0 oklch(0 0 0 / 0.06);
   --shadow-elevated: 0 4px 12px -2px oklch(0 0 0 / 0.06), 0 2px 6px -2px oklch(0 0 0 / 0.04);
-  --shadow-glow: 0 0 0 1px oklch(var(--primary) / 0.08), 0 8px 24px -8px oklch(var(--primary) / 0.25);
+  --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent), 0 8px 24px -8px color-mix(in oklab, var(--primary) 35%, transparent);
 }
 
 :root {
