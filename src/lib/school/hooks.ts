@@ -155,14 +155,22 @@ export function useDeleteRow(
   });
 }
 
-export function useUpdateRow<T extends "academic_sessions" | "terms" | "sections" | "classes" | "class_arms" | "subjects" | "grade_scales">(
-  table: T,
+export function useUpdateRow(
+  table: "academic_sessions" | "terms" | "sections" | "classes" | "class_arms" | "subjects" | "grade_scales",
   invalidate: readonly unknown[],
 ) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: TablesUpdate<T> }) => {
-      const { data, error } = await supabase.from(table).update(patch as never).eq("id", id).select().maybeSingle();
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      const { data, error } = await (supabase.from(table) as never as {
+        update: (p: Record<string, unknown>) => {
+          eq: (col: string, v: string) => { select: () => { maybeSingle: () => Promise<{ data: unknown; error: Error | null }> } };
+        };
+      })
+        .update(patch)
+        .eq("id", id)
+        .select()
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
