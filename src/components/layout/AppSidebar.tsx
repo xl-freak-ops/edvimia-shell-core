@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   GraduationCap,
   Users,
+  Building2,
   CalendarCheck2,
   ClipboardList,
   CalendarDays,
@@ -33,6 +34,7 @@ import { primaryRole, ROLE_SLUG } from "@/lib/auth/roles";
 
 const baseNav = (dashboardUrl: string) => [
   { title: "Dashboard", url: dashboardUrl, icon: LayoutDashboard },
+  { title: "School", url: "/school", icon: Building2 },
   { title: "Students", url: "/students", icon: GraduationCap },
   { title: "Teachers", url: "/teachers", icon: Users },
   { title: "Attendance", url: "/attendance", icon: CalendarCheck2 },

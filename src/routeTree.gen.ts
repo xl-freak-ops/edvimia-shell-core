@@ -18,6 +18,7 @@ import { Route as AccessDeniedRouteImport } from './routes/access-denied'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSchoolRouteImport } from './routes/_authenticated/school'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as AuthenticatedDashboardRoleRouteImport } from './routes/_authenticated/dashboard.$role'
@@ -66,6 +67,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSchoolRoute = AuthenticatedSchoolRouteImport.update({
+  id: '/school',
+  path: '/school',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/school': typeof AuthenticatedSchoolRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/school': typeof AuthenticatedSchoolRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/school': typeof AuthenticatedSchoolRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/welcome'
     | '/profile'
+    | '/school'
     | '/settings'
     | '/dashboard/$role'
     | '/dashboard/'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/welcome'
     | '/profile'
+    | '/school'
     | '/settings'
     | '/dashboard/$role'
     | '/dashboard'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/welcome'
     | '/_authenticated/profile'
+    | '/_authenticated/school'
     | '/_authenticated/settings'
     | '/_authenticated/dashboard/$role'
     | '/_authenticated/dashboard/'
@@ -244,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/school': {
+      id: '/_authenticated/school'
+      path: '/school'
+      fullPath: '/school'
+      preLoaderRoute: typeof AuthenticatedSchoolRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -270,6 +289,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSchoolRoute: typeof AuthenticatedSchoolRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedDashboardRoleRoute: typeof AuthenticatedDashboardRoleRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
@@ -277,6 +297,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSchoolRoute: AuthenticatedSchoolRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedDashboardRoleRoute: AuthenticatedDashboardRoleRoute,
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
