@@ -390,6 +390,313 @@ export type Database = {
           },
         ]
       }
+      student_documents: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          doc_type: string
+          id: string
+          name: string
+          school_id: string
+          size_bytes: number | null
+          storage_path: string
+          student_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          doc_type: string
+          id?: string
+          name: string
+          school_id: string
+          size_bytes?: number | null
+          storage_path: string
+          student_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          doc_type?: string
+          id?: string
+          name?: string
+          school_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          student_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_documents_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_guardians: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          is_emergency: boolean
+          is_primary: boolean
+          occupation: string | null
+          phone: string | null
+          relationship: string
+          school_id: string
+          student_id: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          is_emergency?: boolean
+          is_primary?: boolean
+          occupation?: string | null
+          phone?: string | null
+          relationship: string
+          school_id: string
+          student_id: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_emergency?: boolean
+          is_primary?: boolean
+          occupation?: string | null
+          phone?: string | null
+          relationship?: string
+          school_id?: string
+          student_id?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_guardians_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_guardians_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_status_history: {
+        Row: {
+          action: string
+          created_at: string
+          from_class_id: string | null
+          from_status: Database["public"]["Enums"]["student_status"] | null
+          id: string
+          note: string | null
+          performed_by: string | null
+          school_id: string
+          student_id: string
+          to_class_id: string | null
+          to_status: Database["public"]["Enums"]["student_status"] | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          from_class_id?: string | null
+          from_status?: Database["public"]["Enums"]["student_status"] | null
+          id?: string
+          note?: string | null
+          performed_by?: string | null
+          school_id: string
+          student_id: string
+          to_class_id?: string | null
+          to_status?: Database["public"]["Enums"]["student_status"] | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          from_class_id?: string | null
+          from_status?: Database["public"]["Enums"]["student_status"] | null
+          id?: string
+          note?: string | null
+          performed_by?: string | null
+          school_id?: string
+          student_id?: string
+          to_class_id?: string | null
+          to_status?: Database["public"]["Enums"]["student_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_status_history_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_status_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          admission_date: string
+          admission_number: string
+          arm_id: string | null
+          blood_group: string | null
+          class_id: string | null
+          created_at: string
+          created_by: string | null
+          date_of_birth: string | null
+          disabilities: string | null
+          first_name: string
+          gender: Database["public"]["Enums"]["student_gender"]
+          genotype: string | null
+          home_address: string | null
+          hostel: string | null
+          house: string | null
+          id: string
+          lga: string | null
+          medical_conditions: string | null
+          middle_name: string | null
+          nationality: string | null
+          photo_url: string | null
+          previous_school: string | null
+          religion: string | null
+          school_id: string
+          state_of_origin: string | null
+          status: Database["public"]["Enums"]["student_status"]
+          status_changed_at: string | null
+          status_note: string | null
+          student_code: string
+          surname: string
+          transport_route: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admission_date?: string
+          admission_number: string
+          arm_id?: string | null
+          blood_group?: string | null
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_of_birth?: string | null
+          disabilities?: string | null
+          first_name: string
+          gender: Database["public"]["Enums"]["student_gender"]
+          genotype?: string | null
+          home_address?: string | null
+          hostel?: string | null
+          house?: string | null
+          id?: string
+          lga?: string | null
+          medical_conditions?: string | null
+          middle_name?: string | null
+          nationality?: string | null
+          photo_url?: string | null
+          previous_school?: string | null
+          religion?: string | null
+          school_id: string
+          state_of_origin?: string | null
+          status?: Database["public"]["Enums"]["student_status"]
+          status_changed_at?: string | null
+          status_note?: string | null
+          student_code: string
+          surname: string
+          transport_route?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admission_date?: string
+          admission_number?: string
+          arm_id?: string | null
+          blood_group?: string | null
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_of_birth?: string | null
+          disabilities?: string | null
+          first_name?: string
+          gender?: Database["public"]["Enums"]["student_gender"]
+          genotype?: string | null
+          home_address?: string | null
+          hostel?: string | null
+          house?: string | null
+          id?: string
+          lga?: string | null
+          medical_conditions?: string | null
+          middle_name?: string | null
+          nationality?: string | null
+          photo_url?: string | null
+          previous_school?: string | null
+          religion?: string | null
+          school_id?: string
+          state_of_origin?: string | null
+          status?: Database["public"]["Enums"]["student_status"]
+          status_changed_at?: string | null
+          status_note?: string | null
+          student_code?: string
+          surname?: string
+          transport_route?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subjects: {
         Row: {
           category: Database["public"]["Enums"]["subject_category"]
@@ -543,6 +850,14 @@ export type Database = {
         | "subject_teacher"
         | "parent"
         | "student"
+      student_gender: "male" | "female" | "other"
+      student_status:
+        | "active"
+        | "graduated"
+        | "transferred"
+        | "suspended"
+        | "withdrawn"
+        | "archived"
       subject_category: "core" | "elective" | "practical"
     }
     CompositeTypes: {
@@ -680,6 +995,15 @@ export const Constants = {
         "subject_teacher",
         "parent",
         "student",
+      ],
+      student_gender: ["male", "female", "other"],
+      student_status: [
+        "active",
+        "graduated",
+        "transferred",
+        "suspended",
+        "withdrawn",
+        "archived",
       ],
       subject_category: ["core", "elective", "practical"],
     },
