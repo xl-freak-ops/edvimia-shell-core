@@ -20,7 +20,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSchoolRouteImport } from './routes/_authenticated/school'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedStudentsIndexRouteImport } from './routes/_authenticated/students/index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedStudentsNewRouteImport } from './routes/_authenticated/students/new'
+import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students/$id'
 import { Route as AuthenticatedDashboardRoleRouteImport } from './routes/_authenticated/dashboard.$role'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -77,12 +80,29 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStudentsIndexRoute =
+  AuthenticatedStudentsIndexRouteImport.update({
+    id: '/students/',
+    path: '/students/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardIndexRoute =
   AuthenticatedDashboardIndexRouteImport.update({
     id: '/dashboard/',
     path: '/dashboard/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStudentsNewRoute =
+  AuthenticatedStudentsNewRouteImport.update({
+    id: '/students/new',
+    path: '/students/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentsIdRoute = AuthenticatedStudentsIdRouteImport.update({
+  id: '/students/$id',
+  path: '/students/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoleRoute =
   AuthenticatedDashboardRoleRouteImport.update({
     id: '/dashboard/$role',
@@ -102,7 +122,10 @@ export interface FileRoutesByFullPath {
   '/school': typeof AuthenticatedSchoolRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
+  '/students/$id': typeof AuthenticatedStudentsIdRoute
+  '/students/new': typeof AuthenticatedStudentsNewRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/students/': typeof AuthenticatedStudentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -116,7 +139,10 @@ export interface FileRoutesByTo {
   '/school': typeof AuthenticatedSchoolRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
+  '/students/$id': typeof AuthenticatedStudentsIdRoute
+  '/students/new': typeof AuthenticatedStudentsNewRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/students': typeof AuthenticatedStudentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -132,7 +158,10 @@ export interface FileRoutesById {
   '/_authenticated/school': typeof AuthenticatedSchoolRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
+  '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
+  '/_authenticated/students/new': typeof AuthenticatedStudentsNewRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/_authenticated/students/': typeof AuthenticatedStudentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -148,7 +177,10 @@ export interface FileRouteTypes {
     | '/school'
     | '/settings'
     | '/dashboard/$role'
+    | '/students/$id'
+    | '/students/new'
     | '/dashboard/'
+    | '/students/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -162,7 +194,10 @@ export interface FileRouteTypes {
     | '/school'
     | '/settings'
     | '/dashboard/$role'
+    | '/students/$id'
+    | '/students/new'
     | '/dashboard'
+    | '/students'
   id:
     | '__root__'
     | '/'
@@ -177,7 +212,10 @@ export interface FileRouteTypes {
     | '/_authenticated/school'
     | '/_authenticated/settings'
     | '/_authenticated/dashboard/$role'
+    | '/_authenticated/students/$id'
+    | '/_authenticated/students/new'
     | '/_authenticated/dashboard/'
+    | '/_authenticated/students/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -270,11 +308,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/students/': {
+      id: '/_authenticated/students/'
+      path: '/students'
+      fullPath: '/students/'
+      preLoaderRoute: typeof AuthenticatedStudentsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard/': {
       id: '/_authenticated/dashboard/'
       path: '/dashboard'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/students/new': {
+      id: '/_authenticated/students/new'
+      path: '/students/new'
+      fullPath: '/students/new'
+      preLoaderRoute: typeof AuthenticatedStudentsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/students/$id': {
+      id: '/_authenticated/students/$id'
+      path: '/students/$id'
+      fullPath: '/students/$id'
+      preLoaderRoute: typeof AuthenticatedStudentsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard/$role': {
@@ -292,7 +351,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSchoolRoute: typeof AuthenticatedSchoolRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedDashboardRoleRoute: typeof AuthenticatedDashboardRoleRoute
+  AuthenticatedStudentsIdRoute: typeof AuthenticatedStudentsIdRoute
+  AuthenticatedStudentsNewRoute: typeof AuthenticatedStudentsNewRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
+  AuthenticatedStudentsIndexRoute: typeof AuthenticatedStudentsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -300,7 +362,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSchoolRoute: AuthenticatedSchoolRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedDashboardRoleRoute: AuthenticatedDashboardRoleRoute,
+  AuthenticatedStudentsIdRoute: AuthenticatedStudentsIdRoute,
+  AuthenticatedStudentsNewRoute: AuthenticatedStudentsNewRoute,
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
+  AuthenticatedStudentsIndexRoute: AuthenticatedStudentsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
