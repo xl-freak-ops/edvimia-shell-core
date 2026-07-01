@@ -24,21 +24,20 @@ export function DocumentsPanel({ studentId, schoolId }: { studentId: string; sch
   const { data = [] } = useStudentDocs(studentId);
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [kind, setKind] = useState("birth_certificate");
+  const [docType, setDocType] = useState("birth_certificate");
   const [busy, setBusy] = useState(false);
 
   async function onFile(file: File) {
     setBusy(true);
     try {
-      const { path, signedUrl } = await uploadStudentAsset(schoolId, studentId, kind, file);
+      const { path } = await uploadStudentAsset(schoolId, studentId, docType, file);
       const { error } = await supabase.from("student_documents").insert({
         student_id: studentId,
         school_id: schoolId,
-        kind,
-        file_name: file.name,
-        file_path: path,
-        file_url: signedUrl,
-        mime_type: file.type,
+        doc_type: docType,
+        name: file.name,
+        storage_path: path,
+        content_type: file.type,
         size_bytes: file.size,
       });
       if (error) throw error;
@@ -52,10 +51,16 @@ export function DocumentsPanel({ studentId, schoolId }: { studentId: string; sch
     }
   }
 
+  async function openDoc(path: string) {
+    const { data, error } = await supabase.storage.from("student-assets").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) return toast.error("Could not open document");
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Select value={kind} onValueChange={setKind}>
+        <Select value={docType} onValueChange={setDocType}>
           <SelectTrigger className="w-full sm:w-56"><SelectValue /></SelectTrigger>
           <SelectContent>
             {KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
@@ -78,14 +83,12 @@ export function DocumentsPanel({ studentId, schoolId }: { studentId: string; sch
                   <FileText className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold capitalize">{d.kind.replace(/_/g, " ")}</div>
-                  <div className="truncate text-xs text-muted-foreground">{d.file_name}</div>
+                  <div className="truncate text-sm font-semibold capitalize">{d.doc_type.replace(/_/g, " ")}</div>
+                  <div className="truncate text-xs text-muted-foreground">{d.name}</div>
                 </div>
-                {d.file_url && (
-                  <Button size="icon" variant="ghost" asChild>
-                    <a href={d.file_url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4" /></a>
-                  </Button>
-                )}
+                <Button size="icon" variant="ghost" onClick={() => openDoc(d.storage_path)}>
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           ))}
