@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "@/components/theme-provider";
 import { supabase } from "@/integrations/supabase/client";
+import { DeleteAccountCard } from "@/components/settings/DeleteAccountCard";
+import { useAuth } from "@/lib/auth/AuthProvider";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings · Edvimia" }] }),
@@ -27,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { profile, email } = useAuth();
   const [language, setLanguage] = React.useState("en");
   const [notifEmail, setNotifEmail] = React.useState(true);
   const [notifPush, setNotifPush] = React.useState(true);
@@ -58,12 +61,32 @@ function SettingsPage() {
         </div>
 
         <Tabs defaultValue="security" className="space-y-4">
-          <TabsList className="rounded-lg">
+          <TabsList className="rounded-lg flex-wrap h-auto">
+            <TabsTrigger value="profile" className="rounded-md">Profile</TabsTrigger>
             <TabsTrigger value="security" className="rounded-md">Security</TabsTrigger>
             <TabsTrigger value="notifications" className="rounded-md">Notifications</TabsTrigger>
             <TabsTrigger value="appearance" className="rounded-md">Appearance</TabsTrigger>
             <TabsTrigger value="language" className="rounded-md">Language</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="profile">
+            <Card className="border-border/70 shadow-soft">
+              <CardHeader>
+                <CardTitle>Profile</CardTitle>
+                <CardDescription>Your Edvimia account details.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Full name</Label>
+                  <Input value={profile?.full_name ?? ""} readOnly className="h-11 rounded-lg" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <Input value={email ?? ""} readOnly className="h-11 rounded-lg" />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="security">
             <Card className="border-border/70 shadow-soft">
@@ -149,6 +172,8 @@ function SettingsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <DeleteAccountCard />
       </div>
     </AppShell>
   );
