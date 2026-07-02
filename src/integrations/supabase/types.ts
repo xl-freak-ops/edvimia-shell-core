@@ -390,6 +390,369 @@ export type Database = {
           },
         ]
       }
+      staff: {
+        Row: {
+          address: string | null
+          created_at: string
+          date_of_birth: string | null
+          department: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employment_date: string | null
+          full_name: string
+          gender: Database["public"]["Enums"]["staff_gender"] | null
+          id: string
+          is_teaching: boolean
+          metadata: Json
+          phone: string | null
+          photo_url: string | null
+          position: Database["public"]["Enums"]["staff_position"]
+          qualification: string | null
+          salary: number | null
+          school_id: string
+          specialization: string | null
+          staff_code: string
+          status: Database["public"]["Enums"]["staff_status"]
+          status_changed_at: string | null
+          status_note: string | null
+          updated_at: string
+          user_id: string | null
+          username: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employment_date?: string | null
+          full_name: string
+          gender?: Database["public"]["Enums"]["staff_gender"] | null
+          id?: string
+          is_teaching?: boolean
+          metadata?: Json
+          phone?: string | null
+          photo_url?: string | null
+          position?: Database["public"]["Enums"]["staff_position"]
+          qualification?: string | null
+          salary?: number | null
+          school_id: string
+          specialization?: string | null
+          staff_code: string
+          status?: Database["public"]["Enums"]["staff_status"]
+          status_changed_at?: string | null
+          status_note?: string | null
+          updated_at?: string
+          user_id?: string | null
+          username?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employment_date?: string | null
+          full_name?: string
+          gender?: Database["public"]["Enums"]["staff_gender"] | null
+          id?: string
+          is_teaching?: boolean
+          metadata?: Json
+          phone?: string | null
+          photo_url?: string | null
+          position?: Database["public"]["Enums"]["staff_position"]
+          qualification?: string | null
+          salary?: number | null
+          school_id?: string
+          specialization?: string | null
+          staff_code?: string
+          status?: Database["public"]["Enums"]["staff_status"]
+          status_changed_at?: string | null
+          status_note?: string | null
+          updated_at?: string
+          user_id?: string | null
+          username?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_assignments: {
+        Row: {
+          assignment_type: string
+          class_arm_id: string | null
+          class_id: string | null
+          club_name: string | null
+          created_at: string
+          department: string | null
+          id: string
+          school_id: string
+          session_id: string | null
+          staff_id: string
+          subject_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assignment_type: string
+          class_arm_id?: string | null
+          class_id?: string | null
+          club_name?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          school_id: string
+          session_id?: string | null
+          staff_id: string
+          subject_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assignment_type?: string
+          class_arm_id?: string | null
+          class_id?: string | null
+          club_name?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          school_id?: string
+          session_id?: string | null
+          staff_id?: string
+          subject_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_assignments_class_arm_id_fkey"
+            columns: ["class_arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_assignments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_assignments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_assignments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_assignments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_assignments_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_attendance: {
+        Row: {
+          attendance_date: string
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          id: string
+          note: string | null
+          school_id: string
+          staff_id: string
+          status: Database["public"]["Enums"]["attendance_status"]
+          updated_at: string
+        }
+        Insert: {
+          attendance_date: string
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          school_id: string
+          staff_id: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+          updated_at?: string
+        }
+        Update: {
+          attendance_date?: string
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          school_id?: string
+          staff_id?: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_attendance_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attendance_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_documents: {
+        Row: {
+          created_at: string
+          file_path: string
+          id: string
+          kind: string | null
+          mime_type: string | null
+          school_id: string
+          size_bytes: number | null
+          staff_id: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          id?: string
+          kind?: string | null
+          mime_type?: string | null
+          school_id: string
+          size_bytes?: number | null
+          staff_id: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          id?: string
+          kind?: string | null
+          mime_type?: string | null
+          school_id?: string
+          size_bytes?: number | null
+          staff_id?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_documents_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_documents_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_leave_requests: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string
+          staff_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["leave_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          leave_type: string
+          reason?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id: string
+          staff_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["leave_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          leave_type?: string
+          reason?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string
+          staff_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["leave_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_leave_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_leave_requests_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_documents: {
         Row: {
           content_type: string | null
@@ -850,6 +1213,26 @@ export type Database = {
         | "subject_teacher"
         | "parent"
         | "student"
+      attendance_status: "present" | "absent" | "late" | "excused" | "remote"
+      leave_status: "pending" | "approved" | "rejected" | "cancelled"
+      staff_gender: "male" | "female" | "other"
+      staff_position:
+        | "principal"
+        | "vice_principal"
+        | "school_admin"
+        | "form_teacher"
+        | "subject_teacher"
+        | "account_officer"
+        | "receptionist"
+        | "librarian"
+        | "bursar"
+        | "other"
+      staff_status:
+        | "active"
+        | "on_leave"
+        | "suspended"
+        | "terminated"
+        | "archived"
       student_gender: "male" | "female" | "other"
       student_status:
         | "active"
@@ -995,6 +1378,28 @@ export const Constants = {
         "subject_teacher",
         "parent",
         "student",
+      ],
+      attendance_status: ["present", "absent", "late", "excused", "remote"],
+      leave_status: ["pending", "approved", "rejected", "cancelled"],
+      staff_gender: ["male", "female", "other"],
+      staff_position: [
+        "principal",
+        "vice_principal",
+        "school_admin",
+        "form_teacher",
+        "subject_teacher",
+        "account_officer",
+        "receptionist",
+        "librarian",
+        "bursar",
+        "other",
+      ],
+      staff_status: [
+        "active",
+        "on_leave",
+        "suspended",
+        "terminated",
+        "archived",
       ],
       student_gender: ["male", "female", "other"],
       student_status: [
