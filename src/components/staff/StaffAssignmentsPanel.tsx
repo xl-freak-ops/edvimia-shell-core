@@ -21,6 +21,27 @@ import { Layers } from "lucide-react";
 
 type Kind = "subject" | "class" | "class_arm" | "department" | "club";
 
+type Row = {
+  id: string;
+  assignment_type: string;
+  department: string | null;
+  club_name: string | null;
+  subjects?: { name: string } | null;
+  classes?: { name: string } | null;
+  class_arms?: { name: string } | null;
+};
+
+function rowLabel(r: Row): string {
+  return (
+    r.subjects?.name ??
+    r.classes?.name ??
+    r.class_arms?.name ??
+    r.department ??
+    r.club_name ??
+    "—"
+  );
+}
+
 export function StaffAssignmentsPanel({ staffId, schoolId }: { staffId: string; schoolId: string }) {
   const { data: rows = [], isLoading } = useStaffAssignments(staffId);
   const create = useCreateAssignment(staffId);
@@ -32,11 +53,13 @@ export function StaffAssignmentsPanel({ staffId, schoolId }: { staffId: string; 
   async function add() {
     if (!label.trim()) return toast.error("Enter a name for this assignment");
     try {
+      const trimmed = label.trim();
       await create.mutateAsync({
         staff_id: staffId,
         school_id: schoolId,
-        kind,
-        label: label.trim(),
+        assignment_type: kind,
+        department: kind === "department" ? trimmed : null,
+        club_name: kind === "club" ? trimmed : null,
       });
       toast.success("Assignment added");
       setLabel("");
@@ -46,11 +69,12 @@ export function StaffAssignmentsPanel({ staffId, schoolId }: { staffId: string; 
     }
   }
 
-  const grouped: Record<Kind, typeof rows> = {
+  const grouped: Record<Kind, Row[]> = {
     subject: [], class: [], class_arm: [], department: [], club: [],
   };
-  rows.forEach((r) => {
-    if (grouped[r.kind as Kind]) grouped[r.kind as Kind].push(r);
+  (rows as unknown as Row[]).forEach((r) => {
+    const k = r.assignment_type as Kind;
+    if (grouped[k]) grouped[k].push(r);
   });
 
   return (
@@ -117,7 +141,7 @@ export function StaffAssignmentsPanel({ staffId, schoolId }: { staffId: string; 
                   <ul className="space-y-1.5">
                     {items.map((r) => (
                       <li key={r.id} className="flex items-center justify-between rounded-md bg-muted/40 px-2.5 py-1.5">
-                        <span className="text-sm">{r.label}</span>
+                        <span className="text-sm">{rowLabel(r)}</span>
                         <Button
                           size="icon"
                           variant="ghost"
