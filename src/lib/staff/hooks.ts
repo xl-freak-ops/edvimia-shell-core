@@ -1,0 +1,221 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+
+export type Staff = Tables<"staff">;
+export type StaffAssignment = Tables<"staff_assignments">;
+export type StaffLeave = Tables<"staff_leave_requests">;
+export type StaffAttendance = Tables<"staff_attendance">;
+export type StaffDoc = Tables<"staff_documents">;
+
+export const staffKeys = {
+  list: (sid: string) => ["staff", sid] as const,
+  detail: (id: string) => ["staff", "detail", id] as const,
+  assignments: (id: string) => ["staff", "assignments", id] as const,
+  leave: (sid: string) => ["staff", "leave", sid] as const,
+  attendance: (sid: string) => ["staff", "attendance", sid] as const,
+  docs: (id: string) => ["staff", "docs", id] as const,
+};
+
+export function useStaffList(schoolId: string | null | undefined) {
+  return useQuery({
+    enabled: !!schoolId,
+    queryKey: staffKeys.list(schoolId ?? ""),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff")
+        .select("*")
+        .eq("school_id", schoolId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useStaff(id: string | undefined) {
+  return useQuery({
+    enabled: !!id,
+    queryKey: staffKeys.detail(id ?? ""),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff")
+        .select("*, schools(name)")
+        .eq("id", id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useStaffAssignments(staffId: string | undefined) {
+  return useQuery({
+    enabled: !!staffId,
+    queryKey: staffKeys.assignments(staffId ?? ""),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff_assignments")
+        .select("*, subjects(name), classes(name), class_arms(name)")
+        .eq("staff_id", staffId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useStaffLeave(schoolId: string | null | undefined, staffId?: string) {
+  return useQuery({
+    enabled: !!schoolId,
+    queryKey: [...staffKeys.leave(schoolId ?? ""), staffId ?? "all"],
+    queryFn: async () => {
+      let q = supabase
+        .from("staff_leave_requests")
+        .select("*, staff(full_name, staff_code)")
+        .eq("school_id", schoolId!)
+        .order("created_at", { ascending: false });
+      if (staffId) q = q.eq("staff_id", staffId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useStaffAttendance(schoolId: string | null | undefined, staffId?: string) {
+  return useQuery({
+    enabled: !!schoolId,
+    queryKey: [...staffKeys.attendance(schoolId ?? ""), staffId ?? "all"],
+    queryFn: async () => {
+      let q = supabase
+        .from("staff_attendance")
+        .select("*")
+        .eq("school_id", schoolId!)
+        .order("attendance_date", { ascending: false })
+        .limit(500);
+      if (staffId) q = q.eq("staff_id", staffId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useStaffDocs(staffId: string | undefined) {
+  return useQuery({
+    enabled: !!staffId,
+    queryKey: staffKeys.docs(staffId ?? ""),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff_documents")
+        .select("*")
+        .eq("staff_id", staffId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useCreateStaff(schoolId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: TablesInsert<"staff">) => {
+      const { data, error } = await supabase.from("staff").insert(payload).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: staffKeys.list(schoolId) }),
+  });
+}
+
+export function useUpdateStaff(schoolId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: TablesUpdate<"staff"> }) => {
+      const { data, error } = await supabase.from("staff").update(patch).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: staffKeys.list(schoolId) });
+      qc.invalidateQueries({ queryKey: staffKeys.detail(v.id) });
+    },
+  });
+}
+
+export function useDeleteStaff(schoolId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("staff").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: staffKeys.list(schoolId) }),
+  });
+}
+
+export function useCreateAssignment(staffId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: TablesInsert<"staff_assignments">) => {
+      const { data, error } = await supabase.from("staff_assignments").insert(payload).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: staffKeys.assignments(staffId) }),
+  });
+}
+
+export function useDeleteAssignment(staffId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("staff_assignments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: staffKeys.assignments(staffId) }),
+  });
+}
+
+export async function uploadStaffAsset(
+  schoolId: string,
+  staffIdOrTmp: string,
+  kind: string,
+  file: File,
+): Promise<{ path: string; signedUrl: string }> {
+  const ext = file.name.split(".").pop() ?? "bin";
+  const path = `${schoolId}/${staffIdOrTmp}/${kind}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("staff-assets").upload(path, file, {
+    upsert: true,
+    contentType: file.type,
+  });
+  if (error) throw error;
+  const { data } = await supabase.storage
+    .from("staff-assets")
+    .createSignedUrl(path, 60 * 60 * 24 * 365);
+  return { path, signedUrl: data?.signedUrl ?? "" };
+}
+
+export async function getStaffAssetUrl(path: string) {
+  const { data } = await supabase.storage.from("staff-assets").createSignedUrl(path, 60 * 60);
+  return data?.signedUrl ?? "";
+}
+
+export function generateStaffCode(prefix = "STF"): string {
+  const y = new Date().getFullYear();
+  const rnd = Math.floor(1000 + Math.random() * 9000);
+  return `${prefix}/${y}/${rnd}`;
+}
+
+export function suggestUsername(fullName: string): string {
+  const base = fullName
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .join(".");
+  return `${base}${Math.floor(10 + Math.random() * 89)}`;
+}
