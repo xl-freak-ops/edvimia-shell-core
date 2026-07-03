@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { profile, email } = useAuth();
+  const { profile, email, refresh } = useAuth();
   const [language, setLanguage] = React.useState("en");
   const [notifEmail, setNotifEmail] = React.useState(true);
   const [notifPush, setNotifPush] = React.useState(true);
@@ -40,7 +40,6 @@ function SettingsPage() {
   const [confirmPw, setConfirmPw] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   const [recovering, setRecovering] = React.useState(false);
-  const { refresh } = useAuth();
 
   async function changePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +56,7 @@ function SettingsPage() {
 
   async function restoreAccess() {
     setRecovering(true);
-    const { error } = await supabase.rpc("ensure_my_workspace", { _school_name: null });
+    const { error } = await supabase.rpc("ensure_my_workspace", { _school_name: "" });
     setRecovering(false);
     if (error) return toast.error("Could not restore access", { description: error.message });
     await refresh();
