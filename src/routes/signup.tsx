@@ -138,8 +138,8 @@ function SignupPage() {
         _name: form.schoolName,
         _school_type: form.schoolType,
         _country: form.country,
-        _state: form.state || null,
-        _address: form.address || null,
+        _state: form.state || undefined,
+        _address: form.address || undefined,
         _email: form.schoolEmail,
         _phone: form.schoolPhone,
       });
