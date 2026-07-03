@@ -121,39 +121,32 @@ function SignupPage() {
         return;
       }
 
-      // Ensure session for RLS-protected inserts (auto-confirm is on).
+      // Ensure an active session so the SECURITY DEFINER RPC sees auth.uid().
       if (!signUp.session) {
-        await supabase.auth.signInWithPassword({ email: form.adminEmail, password: form.password });
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: form.adminEmail,
+          password: form.password,
+        });
+        if (signInErr) {
+          toast.error("Signed up, but could not sign in", { description: signInErr.message });
+          return;
+        }
       }
 
-      // 2) Create school
-      const { data: school, error: schoolErr } = await supabase
-        .from("schools")
-        .insert({
-          name: form.schoolName,
-          school_type: form.schoolType,
-          country: form.country,
-          state: form.state || null,
-          address: form.address || null,
-          email: form.schoolEmail,
-          phone: form.schoolPhone,
-        })
-        .select("id")
-        .single();
-      if (schoolErr || !school) {
-        toast.error("Could not create school", { description: schoolErr?.message });
+      // Atomically create school + link profile + assign school_admin role.
+      const { error: rpcErr } = await supabase.rpc("create_school_workspace", {
+        _name: form.schoolName,
+        _school_type: form.schoolType,
+        _country: form.country,
+        _state: form.state || null,
+        _address: form.address || null,
+        _email: form.schoolEmail,
+        _phone: form.schoolPhone,
+      });
+      if (rpcErr) {
+        toast.error("Could not create school", { description: rpcErr.message });
         return;
       }
-
-      // 3) Attach the user to that school + scope their role
-      await Promise.all([
-        supabase.from("profiles").update({ school_id: school.id }).eq("id", signUp.user.id),
-        supabase
-          .from("user_roles")
-          .update({ school_id: school.id })
-          .eq("user_id", signUp.user.id)
-          .eq("role", "school_admin"),
-      ]);
 
       await refresh();
       toast.success("School account created", { description: "Welcome to Edvimia." });
