@@ -26,7 +26,7 @@ function IndexPage() {
   }
   if (!userId) return <Navigate to="/welcome" />;
   const r = primaryRole(roles);
-  if (!r) return <Navigate to="/access-denied" />;
+  if (!r) return <Navigate to="/recover" />;
   const { to, params } = dashboardRouteFor(r);
   return <Navigate to={to} params={params} />;
 }
