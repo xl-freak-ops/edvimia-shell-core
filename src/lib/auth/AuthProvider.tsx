@@ -49,13 +49,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
-    setProfile((prof as Profile) ?? null);
-    setRoles(((roleRows ?? []) as { role: AppRole }[]).map((r) => r.role));
-    if (prof?.school_id) {
+    let profile = (prof as Profile) ?? null;
+    let roleList = ((roleRows ?? []) as { role: AppRole }[]).map((r) => r.role);
+
+    // Self-heal: if the user is missing a role or a school workspace, create
+    // one via the server-side RPC. This prevents "Access denied" lockouts
+    // for accounts that pre-date the auth trigger or lost their workspace.
+    if (!profile || !profile.school_id || roleList.length === 0) {
+      const { error: rpcErr } = await supabase.rpc("ensure_my_workspace", {
+        _school_name: profile?.full_name ? `${profile.full_name}'s School` : "My School",
+      });
+      if (!rpcErr) {
+        const [{ data: p2 }, { data: r2 }] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id, full_name, email, phone, avatar_url, school_id")
+            .eq("id", uid)
+            .maybeSingle(),
+          supabase.from("user_roles").select("role").eq("user_id", uid),
+        ]);
+        profile = (p2 as Profile) ?? profile;
+        roleList = ((r2 ?? []) as { role: AppRole }[]).map((r) => r.role);
+      }
+    }
+
+    setProfile(profile);
+    setRoles(roleList);
+    if (profile?.school_id) {
       const { data: sch } = await supabase
         .from("schools")
         .select("id, name, school_type, country, state")
-        .eq("id", prof.school_id)
+        .eq("id", profile.school_id)
         .maybeSingle();
       setSchool((sch as School) ?? null);
     } else {

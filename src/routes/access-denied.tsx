@@ -27,6 +27,9 @@ function AccessDeniedPage() {
           <Button asChild>
             <Link to="/">Return home</Link>
           </Button>
+          <Button asChild variant="secondary">
+            <Link to="/recover">Recover access</Link>
+          </Button>
         </div>
       </div>
     </div>

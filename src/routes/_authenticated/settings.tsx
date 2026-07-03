@@ -21,6 +21,7 @@ import { useTheme } from "@/components/theme-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { DeleteAccountCard } from "@/components/settings/DeleteAccountCard";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { LifeBuoy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings · Edvimia" }] }),
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { profile, email } = useAuth();
+  const { profile, email, refresh } = useAuth();
   const [language, setLanguage] = React.useState("en");
   const [notifEmail, setNotifEmail] = React.useState(true);
   const [notifPush, setNotifPush] = React.useState(true);
@@ -38,6 +39,7 @@ function SettingsPage() {
   const [pw, setPw] = React.useState("");
   const [confirmPw, setConfirmPw] = React.useState("");
   const [saving, setSaving] = React.useState(false);
+  const [recovering, setRecovering] = React.useState(false);
 
   async function changePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +52,15 @@ function SettingsPage() {
     setPw("");
     setConfirmPw("");
     toast.success("Password updated");
+  }
+
+  async function restoreAccess() {
+    setRecovering(true);
+    const { error } = await supabase.rpc("ensure_my_workspace", { _school_name: "" });
+    setRecovering(false);
+    if (error) return toast.error("Could not restore access", { description: error.message });
+    await refresh();
+    toast.success("Access restored — School Administrator role assigned");
   }
 
   return (
@@ -172,6 +183,20 @@ function SettingsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Card className="border-border/70 shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><LifeBuoy className="h-4 w-4 text-primary" /> Account recovery</CardTitle>
+            <CardDescription>
+              Restore your School Administrator role and school workspace if permissions become corrupted.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={restoreAccess} disabled={recovering} variant="outline" className="rounded-lg">
+              {recovering ? <Loader2 className="h-4 w-4 animate-spin" /> : "Restore my access"}
+            </Button>
+          </CardContent>
+        </Card>
 
         <DeleteAccountCard />
       </div>
