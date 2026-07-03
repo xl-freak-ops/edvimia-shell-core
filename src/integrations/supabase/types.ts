@@ -1192,6 +1192,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_school_workspace: {
+        Args: {
+          _address?: string
+          _country?: string
+          _email?: string
+          _name: string
+          _phone?: string
+          _school_type?: string
+          _state?: string
+        }
+        Returns: string
+      }
       ensure_my_workspace: { Args: { _school_name?: string }; Returns: string }
       has_role: {
         Args: {
