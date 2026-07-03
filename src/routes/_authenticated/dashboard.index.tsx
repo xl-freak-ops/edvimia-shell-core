@@ -10,7 +10,7 @@ function DashboardIndex() {
   const { roles, loading } = useAuth();
   if (loading) return null;
   const r = primaryRole(roles);
-  if (!r) return <Navigate to="/access-denied" />;
+  if (!r) return <Navigate to="/recover" />;
   const { to, params } = dashboardRouteFor(r);
   return <Navigate to={to} params={params} />;
 }
