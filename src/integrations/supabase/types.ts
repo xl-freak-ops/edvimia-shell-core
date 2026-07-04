@@ -1581,7 +1581,14 @@ export type Database = {
         | "subject_teacher"
         | "parent"
         | "student"
-      attendance_status: "present" | "absent" | "late" | "excused" | "remote"
+      attendance_status:
+        | "present"
+        | "absent"
+        | "late"
+        | "excused"
+        | "remote"
+        | "medical"
+        | "half_day"
       leave_status: "pending" | "approved" | "rejected" | "cancelled"
       period_kind: "class" | "break" | "lunch" | "assembly" | "free"
       staff_gender: "male" | "female" | "other"
@@ -1748,7 +1755,15 @@ export const Constants = {
         "parent",
         "student",
       ],
-      attendance_status: ["present", "absent", "late", "excused", "remote"],
+      attendance_status: [
+        "present",
+        "absent",
+        "late",
+        "excused",
+        "remote",
+        "medical",
+        "half_day",
+      ],
       leave_status: ["pending", "approved", "rejected", "cancelled"],
       period_kind: ["class", "break", "lunch", "assembly", "free"],
       staff_gender: ["male", "female", "other"],
