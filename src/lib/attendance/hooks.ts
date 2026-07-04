@@ -127,9 +127,10 @@ export const STATUS_META: Record<AttendanceStatus, { label: string; short: strin
   excused: { label: "Excused", short: "E", color: "bg-sky-500 text-white", ring: "ring-sky-500" },
   medical: { label: "Medical", short: "M", color: "bg-violet-500 text-white", ring: "ring-violet-500" },
   half_day: { label: "Half Day", short: "H", color: "bg-slate-500 text-white", ring: "ring-slate-500" },
+  remote: { label: "Remote", short: "R", color: "bg-teal-500 text-white", ring: "ring-teal-500" },
 };
 
-export const STATUS_ORDER: AttendanceStatus[] = ["present", "absent", "late", "excused", "medical", "half_day"];
+export const STATUS_ORDER: AttendanceStatus[] = ["present", "absent", "late", "excused", "medical", "half_day", "remote"];
 
 export function attendanceRate(rows: Pick<AttendanceRecord, "status">[]): number {
   if (!rows.length) return 0;
