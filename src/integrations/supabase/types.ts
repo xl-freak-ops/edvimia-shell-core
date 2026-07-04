@@ -55,6 +55,170 @@ export type Database = {
           },
         ]
       }
+      attendance_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          new_status: Database["public"]["Enums"]["attendance_status"] | null
+          note: string | null
+          old_status: Database["public"]["Enums"]["attendance_status"] | null
+          record_id: string
+          school_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          new_status?: Database["public"]["Enums"]["attendance_status"] | null
+          note?: string | null
+          old_status?: Database["public"]["Enums"]["attendance_status"] | null
+          record_id: string
+          school_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          new_status?: Database["public"]["Enums"]["attendance_status"] | null
+          note?: string | null
+          old_status?: Database["public"]["Enums"]["attendance_status"] | null
+          record_id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_audit_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_audit_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_records: {
+        Row: {
+          arm_id: string | null
+          class_id: string | null
+          created_at: string
+          date: string
+          edited_at: string | null
+          edited_by: string | null
+          id: string
+          is_finalized: boolean
+          marked_at: string
+          marked_by: string | null
+          remark: string | null
+          school_id: string
+          session_id: string | null
+          status: Database["public"]["Enums"]["attendance_status"]
+          student_id: string
+          subject_id: string | null
+          term_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arm_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          date: string
+          edited_at?: string | null
+          edited_by?: string | null
+          id?: string
+          is_finalized?: boolean
+          marked_at?: string
+          marked_by?: string | null
+          remark?: string | null
+          school_id: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"]
+          student_id: string
+          subject_id?: string | null
+          term_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arm_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          date?: string
+          edited_at?: string | null
+          edited_by?: string | null
+          id?: string
+          is_finalized?: boolean
+          marked_at?: string
+          marked_by?: string | null
+          remark?: string | null
+          school_id?: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"]
+          student_id?: string
+          subject_id?: string | null
+          term_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_arms: {
         Row: {
           class_id: string
@@ -1155,6 +1319,197 @@ export type Database = {
           },
         ]
       }
+      timetable_periods: {
+        Row: {
+          arm_id: string | null
+          class_id: string | null
+          color: string | null
+          created_at: string
+          created_by: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          kind: Database["public"]["Enums"]["period_kind"]
+          note: string | null
+          period_index: number
+          room: string | null
+          school_id: string
+          session_id: string | null
+          start_time: string
+          subject_id: string | null
+          teacher_id: string | null
+          term_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arm_id?: string | null
+          class_id?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          kind?: Database["public"]["Enums"]["period_kind"]
+          note?: string | null
+          period_index: number
+          room?: string | null
+          school_id: string
+          session_id?: string | null
+          start_time: string
+          subject_id?: string | null
+          teacher_id?: string | null
+          term_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arm_id?: string | null
+          class_id?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["period_kind"]
+          note?: string | null
+          period_index?: number
+          room?: string | null
+          school_id?: string
+          session_id?: string | null
+          start_time?: string
+          subject_id?: string | null
+          teacher_id?: string | null
+          term_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_periods_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_periods_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_periods_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_periods_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_periods_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_periods_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_periods_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetable_versions: {
+        Row: {
+          arm_id: string | null
+          class_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string | null
+          school_id: string
+          session_id: string | null
+          snapshot: Json
+          term_id: string | null
+        }
+        Insert: {
+          arm_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          school_id: string
+          session_id?: string | null
+          snapshot: Json
+          term_id?: string | null
+        }
+        Update: {
+          arm_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          school_id?: string
+          session_id?: string | null
+          snapshot?: Json
+          term_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_versions_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_versions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_versions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_versions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_versions_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1226,8 +1581,16 @@ export type Database = {
         | "subject_teacher"
         | "parent"
         | "student"
-      attendance_status: "present" | "absent" | "late" | "excused" | "remote"
+      attendance_status:
+        | "present"
+        | "absent"
+        | "late"
+        | "excused"
+        | "remote"
+        | "medical"
+        | "half_day"
       leave_status: "pending" | "approved" | "rejected" | "cancelled"
+      period_kind: "class" | "break" | "lunch" | "assembly" | "free"
       staff_gender: "male" | "female" | "other"
       staff_position:
         | "principal"
@@ -1392,8 +1755,17 @@ export const Constants = {
         "parent",
         "student",
       ],
-      attendance_status: ["present", "absent", "late", "excused", "remote"],
+      attendance_status: [
+        "present",
+        "absent",
+        "late",
+        "excused",
+        "remote",
+        "medical",
+        "half_day",
+      ],
       leave_status: ["pending", "approved", "rejected", "cancelled"],
+      period_kind: ["class", "break", "lunch", "assembly", "free"],
       staff_gender: ["male", "female", "other"],
       staff_position: [
         "principal",
