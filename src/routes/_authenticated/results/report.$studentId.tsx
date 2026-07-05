@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { useSubjects, useGradeScales, useTerms } from "@/lib/school/hooks";
+import { useSubjects, useGradeScales, useTerms, useSchool } from "@/lib/school/hooks";
 import { useStudent } from "@/lib/students/hooks";
 import { useComponents, useTermScores, useResultMeta } from "@/lib/results/hooks";
 import { ReportCard } from "@/components/results/ReportCard";
@@ -21,6 +21,7 @@ function ReportPage() {
   const { term: termParam } = Route.useSearch();
   const { school } = useAuth();
   const schoolId = school?.id ?? null;
+  const schoolFull = useSchool(schoolId);
 
   const terms = useTerms(schoolId);
   const currentTerm = terms.data?.find((t) => t.is_current) ?? terms.data?.[0] ?? null;
@@ -50,7 +51,7 @@ function ReportPage() {
     <AppShell>
       <div className="mx-auto w-full max-w-6xl p-4 sm:p-6 lg:p-8">
         <ReportCard
-          school={school ? { ...school, logo_url: null, address: null } as never : null}
+          school={(schoolFull.data ?? null) as never}
           student={student.data as never}
           subjects={subjects.data ?? []}
           components={components.data ?? []}

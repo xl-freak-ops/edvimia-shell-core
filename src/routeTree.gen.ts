@@ -32,6 +32,7 @@ import { Route as AuthenticatedTeachersIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedStudentsNewRouteImport } from './routes/_authenticated/students/new'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students/$id'
 import { Route as AuthenticatedDashboardRoleRouteImport } from './routes/_authenticated/dashboard.$role'
+import { Route as AuthenticatedResultsReportStudentIdRouteImport } from './routes/_authenticated/results/report.$studentId'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -154,6 +155,12 @@ const AuthenticatedDashboardRoleRoute =
     path: '/dashboard/$role',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedResultsReportStudentIdRoute =
+  AuthenticatedResultsReportStudentIdRouteImport.update({
+    id: '/results/report/$studentId',
+    path: '/results/report/$studentId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/results/': typeof AuthenticatedResultsIndexRoute
   '/students/': typeof AuthenticatedStudentsIndexRoute
   '/teachers/': typeof AuthenticatedTeachersIndexRoute
+  '/results/report/$studentId': typeof AuthenticatedResultsReportStudentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -202,6 +210,7 @@ export interface FileRoutesByTo {
   '/results': typeof AuthenticatedResultsIndexRoute
   '/students': typeof AuthenticatedStudentsIndexRoute
   '/teachers': typeof AuthenticatedTeachersIndexRoute
+  '/results/report/$studentId': typeof AuthenticatedResultsReportStudentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -228,6 +237,7 @@ export interface FileRoutesById {
   '/_authenticated/results/': typeof AuthenticatedResultsIndexRoute
   '/_authenticated/students/': typeof AuthenticatedStudentsIndexRoute
   '/_authenticated/teachers/': typeof AuthenticatedTeachersIndexRoute
+  '/_authenticated/results/report/$studentId': typeof AuthenticatedResultsReportStudentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/results/'
     | '/students/'
     | '/teachers/'
+    | '/results/report/$studentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/students'
     | '/teachers'
+    | '/results/report/$studentId'
   id:
     | '__root__'
     | '/'
@@ -303,6 +315,7 @@ export interface FileRouteTypes {
     | '/_authenticated/results/'
     | '/_authenticated/students/'
     | '/_authenticated/teachers/'
+    | '/_authenticated/results/report/$studentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -480,6 +493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRoleRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/results/report/$studentId': {
+      id: '/_authenticated/results/report/$studentId'
+      path: '/results/report/$studentId'
+      fullPath: '/results/report/$studentId'
+      preLoaderRoute: typeof AuthenticatedResultsReportStudentIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -498,6 +518,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedResultsIndexRoute: typeof AuthenticatedResultsIndexRoute
   AuthenticatedStudentsIndexRoute: typeof AuthenticatedStudentsIndexRoute
   AuthenticatedTeachersIndexRoute: typeof AuthenticatedTeachersIndexRoute
+  AuthenticatedResultsReportStudentIdRoute: typeof AuthenticatedResultsReportStudentIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -515,6 +536,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedResultsIndexRoute: AuthenticatedResultsIndexRoute,
   AuthenticatedStudentsIndexRoute: AuthenticatedStudentsIndexRoute,
   AuthenticatedTeachersIndexRoute: AuthenticatedTeachersIndexRoute,
+  AuthenticatedResultsReportStudentIdRoute:
+    AuthenticatedResultsReportStudentIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
