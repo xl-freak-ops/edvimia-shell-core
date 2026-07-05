@@ -55,6 +55,56 @@ export type Database = {
           },
         ]
       }
+      assessment_components: {
+        Row: {
+          code: string
+          created_at: string
+          display_order: number
+          id: string
+          is_enabled: boolean
+          is_exam: boolean
+          max_score: number
+          name: string
+          school_id: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_enabled?: boolean
+          is_exam?: boolean
+          max_score?: number
+          name: string
+          school_id: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_enabled?: boolean
+          is_exam?: boolean
+          max_score?: number
+          name?: string
+          school_id?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_components_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_audit: {
         Row: {
           action: string
@@ -387,6 +437,421 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      result_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["result_workflow_status"]
+            | null
+          id: string
+          note: string | null
+          school_id: string
+          sheet_id: string | null
+          student_id: string | null
+          to_status:
+            | Database["public"]["Enums"]["result_workflow_status"]
+            | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["result_workflow_status"]
+            | null
+          id?: string
+          note?: string | null
+          school_id: string
+          sheet_id?: string | null
+          student_id?: string | null
+          to_status?:
+            | Database["public"]["Enums"]["result_workflow_status"]
+            | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["result_workflow_status"]
+            | null
+          id?: string
+          note?: string | null
+          school_id?: string
+          sheet_id?: string | null
+          student_id?: string | null
+          to_status?:
+            | Database["public"]["Enums"]["result_workflow_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_audit_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_audit_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "result_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_audit_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      result_meta: {
+        Row: {
+          arm_id: string | null
+          attendance_absent: number | null
+          attendance_present: number | null
+          attendance_total: number | null
+          class_id: string | null
+          created_at: string
+          form_teacher_comment: string | null
+          id: string
+          is_published: boolean
+          next_resumption: string | null
+          principal_comment: string | null
+          promotion: Database["public"]["Enums"]["promotion_status"] | null
+          published_at: string | null
+          published_by: string | null
+          school_id: string
+          session_id: string | null
+          student_id: string
+          term_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arm_id?: string | null
+          attendance_absent?: number | null
+          attendance_present?: number | null
+          attendance_total?: number | null
+          class_id?: string | null
+          created_at?: string
+          form_teacher_comment?: string | null
+          id?: string
+          is_published?: boolean
+          next_resumption?: string | null
+          principal_comment?: string | null
+          promotion?: Database["public"]["Enums"]["promotion_status"] | null
+          published_at?: string | null
+          published_by?: string | null
+          school_id: string
+          session_id?: string | null
+          student_id: string
+          term_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arm_id?: string | null
+          attendance_absent?: number | null
+          attendance_present?: number | null
+          attendance_total?: number | null
+          class_id?: string | null
+          created_at?: string
+          form_teacher_comment?: string | null
+          id?: string
+          is_published?: boolean
+          next_resumption?: string | null
+          principal_comment?: string | null
+          promotion?: Database["public"]["Enums"]["promotion_status"] | null
+          published_at?: string | null
+          published_by?: string | null
+          school_id?: string
+          session_id?: string | null
+          student_id?: string
+          term_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_meta_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_meta_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_meta_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_meta_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_meta_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_meta_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      result_scores: {
+        Row: {
+          arm_id: string | null
+          class_id: string | null
+          component_id: string
+          created_at: string
+          entered_by: string | null
+          id: string
+          school_id: string
+          score: number | null
+          session_id: string | null
+          sheet_id: string | null
+          student_id: string
+          subject_id: string
+          term_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arm_id?: string | null
+          class_id?: string | null
+          component_id: string
+          created_at?: string
+          entered_by?: string | null
+          id?: string
+          school_id: string
+          score?: number | null
+          session_id?: string | null
+          sheet_id?: string | null
+          student_id: string
+          subject_id: string
+          term_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arm_id?: string | null
+          class_id?: string | null
+          component_id?: string
+          created_at?: string
+          entered_by?: string | null
+          id?: string
+          school_id?: string
+          score?: number | null
+          session_id?: string | null
+          sheet_id?: string | null
+          student_id?: string
+          subject_id?: string
+          term_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_scores_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_scores_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_scores_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_scores_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_scores_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_scores_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "result_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_scores_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_scores_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_scores_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      result_sheets: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          arm_id: string | null
+          class_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          published_at: string | null
+          published_by: string | null
+          rejected_reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string
+          session_id: string | null
+          status: Database["public"]["Enums"]["result_workflow_status"]
+          subject_id: string | null
+          submitted_at: string | null
+          submitted_by: string | null
+          teacher_comment: string | null
+          term_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          arm_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          published_by?: string | null
+          rejected_reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["result_workflow_status"]
+          subject_id?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          teacher_comment?: string | null
+          term_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          arm_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          published_by?: string | null
+          rejected_reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["result_workflow_status"]
+          subject_id?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          teacher_comment?: string | null
+          term_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_sheets_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_sheets_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_sheets_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_sheets_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_sheets_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_sheets_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
             referencedColumns: ["id"]
           },
         ]
@@ -1570,6 +2035,10 @@ export type Database = {
       is_school_admin_of: { Args: { _school_id: string }; Returns: boolean }
       is_school_member: { Args: { _school_id: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      seed_default_assessments: {
+        Args: { _school_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
@@ -1591,6 +2060,18 @@ export type Database = {
         | "half_day"
       leave_status: "pending" | "approved" | "rejected" | "cancelled"
       period_kind: "class" | "break" | "lunch" | "assembly" | "free"
+      promotion_status:
+        | "promoted"
+        | "repeat"
+        | "conditional"
+        | "graduated"
+        | "pending"
+      result_workflow_status:
+        | "draft"
+        | "pending_review"
+        | "approved"
+        | "published"
+        | "rejected"
       staff_gender: "male" | "female" | "other"
       staff_position:
         | "principal"
@@ -1766,6 +2247,20 @@ export const Constants = {
       ],
       leave_status: ["pending", "approved", "rejected", "cancelled"],
       period_kind: ["class", "break", "lunch", "assembly", "free"],
+      promotion_status: [
+        "promoted",
+        "repeat",
+        "conditional",
+        "graduated",
+        "pending",
+      ],
+      result_workflow_status: [
+        "draft",
+        "pending_review",
+        "approved",
+        "published",
+        "rejected",
+      ],
       staff_gender: ["male", "female", "other"],
       staff_position: [
         "principal",
