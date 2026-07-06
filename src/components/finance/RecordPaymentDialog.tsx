@@ -83,6 +83,7 @@ export function RecordPaymentDialog({
               try {
                 await record.mutateAsync({
                   school_id: schoolId,
+                  payment_code: "",
                   invoice_id: invoice.id,
                   student_id: invoice.student_id,
                   method,
