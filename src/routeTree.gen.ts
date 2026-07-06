@@ -22,6 +22,7 @@ import { Route as AuthenticatedTimetableRouteImport } from './routes/_authentica
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSchoolRouteImport } from './routes/_authenticated/school'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedTeachersIndexRouteImport } from './routes/_authenticated/teachers/index'
 import { Route as AuthenticatedStudentsIndexRouteImport } from './routes/_authenticated/students/index'
@@ -98,6 +99,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFinanceRoute = AuthenticatedFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
+  '/finance': typeof AuthenticatedFinanceRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/school': typeof AuthenticatedSchoolRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
+  '/finance': typeof AuthenticatedFinanceRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/school': typeof AuthenticatedSchoolRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
+  '/_authenticated/finance': typeof AuthenticatedFinanceRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/school': typeof AuthenticatedSchoolRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/welcome'
     | '/attendance'
+    | '/finance'
     | '/profile'
     | '/school'
     | '/settings'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/welcome'
     | '/attendance'
+    | '/finance'
     | '/profile'
     | '/school'
     | '/settings'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/welcome'
     | '/_authenticated/attendance'
+    | '/_authenticated/finance'
     | '/_authenticated/profile'
     | '/_authenticated/school'
     | '/_authenticated/settings'
@@ -423,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/finance': {
+      id: '/_authenticated/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof AuthenticatedFinanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/attendance': {
       id: '/_authenticated/attendance'
       path: '/attendance'
@@ -505,6 +524,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
+  AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSchoolRoute: typeof AuthenticatedSchoolRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -523,6 +543,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
+  AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSchoolRoute: AuthenticatedSchoolRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
