@@ -356,6 +356,304 @@ export type Database = {
           },
         ]
       }
+      expense_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          expense_date: string
+          id: string
+          notes: string | null
+          receipt_url: string | null
+          recurrence_note: string | null
+          recurring: boolean
+          school_id: string
+          status: Database["public"]["Enums"]["expense_status"]
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          receipt_url?: string | null
+          recurrence_note?: string | null
+          recurring?: boolean
+          school_id: string
+          status?: Database["public"]["Enums"]["expense_status"]
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          receipt_url?: string | null
+          recurrence_note?: string | null
+          recurring?: boolean
+          school_id?: string
+          status?: Database["public"]["Enums"]["expense_status"]
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_categories: {
+        Row: {
+          code: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_categories_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_structures: {
+        Row: {
+          amount: number
+          arm_id: string | null
+          category_id: string
+          class_id: string | null
+          created_at: string
+          description: string | null
+          discount_amount: number
+          due_date: string | null
+          id: string
+          is_active: boolean
+          mandatory: boolean
+          penalty_amount: number
+          school_id: string
+          session_id: string | null
+          term_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          arm_id?: string | null
+          category_id: string
+          class_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_amount?: number
+          due_date?: string | null
+          id?: string
+          is_active?: boolean
+          mandatory?: boolean
+          penalty_amount?: number
+          school_id: string
+          session_id?: string | null
+          term_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          arm_id?: string | null
+          category_id?: string
+          class_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_amount?: number
+          due_date?: string | null
+          id?: string
+          is_active?: boolean
+          mandatory?: boolean
+          penalty_amount?: number
+          school_id?: string
+          session_id?: string | null
+          term_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_structures_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_structures_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "fee_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_structures_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_structures_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_structures_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_structures_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          detail: Json | null
+          entity: string
+          entity_id: string | null
+          id: string
+          school_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          detail?: Json | null
+          entity: string
+          entity_id?: string | null
+          id?: string
+          school_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          detail?: Json | null
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_audit_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grade_scales: {
         Row: {
           created_at: string
@@ -400,6 +698,265 @@ export type Database = {
           },
         ]
       }
+      invoice_items: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          description: string
+          discount: number
+          fee_structure_id: string | null
+          id: string
+          invoice_id: string
+          penalty: number
+          quantity: number
+          school_id: string
+        }
+        Insert: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          description: string
+          discount?: number
+          fee_structure_id?: string | null
+          id?: string
+          invoice_id: string
+          penalty?: number
+          quantity?: number
+          school_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          discount?: number
+          fee_structure_id?: string | null
+          id?: string
+          invoice_id?: string
+          penalty?: number
+          quantity?: number
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "fee_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_fee_structure_id_fkey"
+            columns: ["fee_structure_id"]
+            isOneToOne: false
+            referencedRelation: "fee_structures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_paid: number
+          arm_id: string | null
+          balance: number | null
+          class_id: string | null
+          created_at: string
+          created_by: string | null
+          discount_total: number
+          due_date: string | null
+          id: string
+          invoice_number: string
+          issue_date: string
+          notes: string | null
+          penalty_total: number
+          school_id: string
+          session_id: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          student_id: string
+          subtotal: number
+          term_id: string | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          arm_id?: string | null
+          balance?: number | null
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_total?: number
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          notes?: string | null
+          penalty_total?: number
+          school_id: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          student_id: string
+          subtotal?: number
+          term_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          arm_id?: string | null
+          balance?: number | null
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_total?: number
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          notes?: string | null
+          penalty_total?: number
+          school_id?: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          student_id?: string
+          subtotal?: number
+          term_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_arm_id_fkey"
+            columns: ["arm_id"]
+            isOneToOne: false
+            referencedRelation: "class_arms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          cashier_id: string | null
+          created_at: string
+          id: string
+          invoice_id: string | null
+          metadata: Json | null
+          method: Database["public"]["Enums"]["payment_method"]
+          notes: string | null
+          paid_at: string
+          payment_code: string
+          reference: string | null
+          school_id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          cashier_id?: string | null
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json | null
+          method: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_at?: string
+          payment_code: string
+          reference?: string | null
+          school_id: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          cashier_id?: string | null
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json | null
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_at?: string
+          payment_code?: string
+          reference?: string | null
+          school_id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -437,6 +994,77 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      receipts: {
+        Row: {
+          amount: number
+          balance_after: number
+          id: string
+          invoice_id: string | null
+          issued_at: string
+          issued_by: string | null
+          payment_id: string
+          receipt_number: string
+          school_id: string
+          student_id: string
+          verification_token: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number
+          id?: string
+          invoice_id?: string | null
+          issued_at?: string
+          issued_by?: string | null
+          payment_id: string
+          receipt_number: string
+          school_id: string
+          student_id: string
+          verification_token?: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          id?: string
+          invoice_id?: string | null
+          issued_at?: string
+          issued_by?: string | null
+          payment_id?: string
+          receipt_number?: string
+          school_id?: string
+          student_id?: string
+          verification_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: true
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -2012,6 +2640,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_finance: { Args: { _school_id: string }; Returns: boolean }
       create_school_workspace: {
         Args: {
           _address?: string
@@ -2025,6 +2654,15 @@ export type Database = {
         Returns: string
       }
       ensure_my_workspace: { Args: { _school_name?: string }; Returns: string }
+      generate_invoices_for_class: {
+        Args: {
+          _arm_id?: string
+          _class_id: string
+          _school_id: string
+          _term_id: string
+        }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2058,7 +2696,30 @@ export type Database = {
         | "remote"
         | "medical"
         | "half_day"
+      expense_status:
+        | "draft"
+        | "pending_approval"
+        | "approved"
+        | "rejected"
+        | "paid"
+      invoice_status:
+        | "draft"
+        | "issued"
+        | "partial"
+        | "paid"
+        | "overdue"
+        | "cancelled"
       leave_status: "pending" | "approved" | "rejected" | "cancelled"
+      payment_method:
+        | "cash"
+        | "bank_transfer"
+        | "pos"
+        | "card"
+        | "online"
+        | "cheque"
+        | "scholarship"
+        | "waiver"
+        | "discount"
       period_kind: "class" | "break" | "lunch" | "assembly" | "free"
       promotion_status:
         | "promoted"
@@ -2245,7 +2906,33 @@ export const Constants = {
         "medical",
         "half_day",
       ],
+      expense_status: [
+        "draft",
+        "pending_approval",
+        "approved",
+        "rejected",
+        "paid",
+      ],
+      invoice_status: [
+        "draft",
+        "issued",
+        "partial",
+        "paid",
+        "overdue",
+        "cancelled",
+      ],
       leave_status: ["pending", "approved", "rejected", "cancelled"],
+      payment_method: [
+        "cash",
+        "bank_transfer",
+        "pos",
+        "card",
+        "online",
+        "cheque",
+        "scholarship",
+        "waiver",
+        "discount",
+      ],
       period_kind: ["class", "break", "lunch", "assembly", "free"],
       promotion_status: [
         "promoted",
