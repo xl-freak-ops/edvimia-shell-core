@@ -1,0 +1,1 @@
+- [Edvimia Architecture](edvimia-architecture.md) — full stack, auth, routing, DB schema, RLS, UI system, modules, conventions. Read before any feature work.
