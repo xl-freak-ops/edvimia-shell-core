@@ -4,3 +4,45 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_PROJECT_ID = "racivxqtxtibtqffwdtt"
+SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhY2l2eHF0eHRpYnRxZmZ3ZHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTA2MTMsImV4cCI6MjA5ODI2NjYxM30.sfYvpHR7dIkaCEEPvXzOO9zbPCAxbn2_1PJFo9nLEfQ"
+SUPABASE_URL = "https://racivxqtxtibtqffwdtt.supabase.co"
+VITE_SUPABASE_PROJECT_ID = "racivxqtxtibtqffwdtt"
+VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhY2l2eHF0eHRpYnRxZmZ3ZHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTA2MTMsImV4cCI6MjA5ODI2NjYxM30.sfYvpHR7dIkaCEEPvXzOO9zbPCAxbn2_1PJFo9nLEfQ"
+VITE_SUPABASE_URL = "https://racivxqtxtibtqffwdtt.supabase.co"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bun run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3001
