@@ -1,1 +1,2 @@
 - [Edvimia Architecture](edvimia-architecture.md) — full stack, auth, routing, DB schema, RLS, UI system, modules, conventions. Read before any feature work.
+- [Supabase DB access from Replit](supabase-db-access.md) — direct DB host is IPv6-only (unreachable); use the pooler connection string instead.
