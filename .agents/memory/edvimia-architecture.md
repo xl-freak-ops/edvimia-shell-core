@@ -5,6 +5,13 @@ description: Full architectural reference for the Edvimia AI School OS — stack
 
 ## NEW MODULES (added July 2026)
 
+### Reports Center, Analytics, School Health, Edvi AI Intelligence Center (added July 14, 2026)
+- Four new routes under `src/routes/_authenticated/`: `reports.tsx`, `analytics.tsx`, `school-health.tsx`, `ai.tsx` — all client-side aggregation, no new DB schema.
+- Reused existing per-domain hooks (attendance/results/finance/staff/students) and existing export helpers rather than duplicating query logic; only net-new pieces were `src/lib/attendance/export.ts`, `src/lib/results/export.ts`, `src/lib/analytics/hooks.ts` (pure aggregation functions), `src/lib/school-health/calc.ts` (composite score math).
+- "Edvi AI Intelligence Center" (`/ai`) is a tabbed aggregator of the pre-existing per-domain Insights components (`ResultsInsights`, `AttendanceInsights`, `StaffAIInsights`, `TimetableInsights`, `FinanceInsights`) plus one new cross-domain `AISummaryCard` — it does not reimplement insight logic, only composes it.
+- Charts use `src/components/ui/chart.tsx` (shadcn's recharts wrapper) — this was already a project dependency but unused elsewhere; now used by `src/components/analytics/{TrendChartCard,BarChartCard}.tsx`.
+- "School Health" score is a simple unweighted average of 5 dimension scores (attendance/academic/finance/staff/communication attendance-rate-style percentages), each -1 (no data) excluded from the average rather than treated as 0 — **Why:** avoids falsely tanking the score for schools that haven't started using a given module yet.
+
 ### Communication Center (`/communication`)
 - Route: `src/routes/_authenticated/communication.tsx`
 - Hooks: `src/lib/communication/hooks.ts` (announcements, messages, notifications, homework)

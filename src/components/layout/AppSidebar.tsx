@@ -10,6 +10,8 @@ import {
   Wallet,
   MessageSquare,
   BarChart3,
+  LineChart,
+  HeartPulse,
   Sparkles,
   Settings,
   LogOut,
@@ -71,6 +73,8 @@ const staffNav = (dashboardUrl: string): NavGroup[] => [
   {
     label: "Intelligence",
     items: [
+      { title: "Analytics", url: "/analytics", icon: LineChart },
+      { title: "School Health", url: "/school-health", icon: HeartPulse },
       { title: "Edvi · AI Assistant", url: "/ai", icon: Sparkles, badge: "New" },
     ],
   },
