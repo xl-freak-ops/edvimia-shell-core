@@ -9,7 +9,6 @@ import {
   CalendarCheck2,
   Building2,
   ShieldCheck,
-  HeartHandshake,
   Trophy,
   type LucideIcon,
 } from "lucide-react";
@@ -23,6 +22,8 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TasksWidget } from "@/components/dashboard/TasksWidget";
 import { AnnouncementCard } from "@/components/dashboard/AnnouncementCard";
 import { RecentStudentsTable } from "@/components/dashboard/RecentStudentsTable";
+import { ParentDashboard } from "@/components/parent/ParentDashboard";
+import { StudentDashboard } from "@/components/student-portal/StudentDashboard";
 import type { AppRole } from "@/lib/auth/roles";
 import { ROLE_LABEL } from "@/lib/auth/roles";
 
@@ -36,7 +37,7 @@ type Stat = {
   spark: number[];
 };
 
-const STATS: Record<AppRole, Stat[]> = {
+const STATS: Record<Exclude<AppRole, "parent" | "student">, Stat[]> = {
   super_admin: [
     { label: "Schools onboarded", value: "412", delta: "+24", trend: "up", icon: Building2, accent: "primary", spark: [200, 240, 260, 300, 340, 380, 412] },
     { label: "Active users", value: "84,302", delta: "+6.4%", trend: "up", icon: Users, accent: "success", spark: [60, 64, 68, 72, 76, 80, 84] },
@@ -73,22 +74,14 @@ const STATS: Record<AppRole, Stat[]> = {
     { label: "Assignments pending", value: "47", delta: "-6", trend: "down", icon: ClipboardList, accent: "brand", spark: [60, 56, 54, 52, 50, 48, 47] },
     { label: "Subject average", value: "72.1", delta: "+0.4", trend: "up", icon: TrendingUp, accent: "info", spark: [70, 71, 71, 71, 72, 72, 72] },
   ],
-  parent: [
-    { label: "Children", value: "2", icon: HeartHandshake, accent: "primary", spark: [2, 2, 2, 2, 2, 2, 2] },
-    { label: "Attendance (avg)", value: "96.2%", delta: "+0.8%", trend: "up", icon: CalendarCheck2, accent: "success", spark: [93, 94, 95, 95, 96, 96, 96] },
-    { label: "Unpaid fees", value: "₦42,500", delta: "-₦5k", trend: "down", icon: Wallet, accent: "brand", spark: [80, 70, 65, 60, 55, 50, 42] },
-    { label: "Avg. score", value: "81.4", delta: "+1.6", trend: "up", icon: Trophy, accent: "info", spark: [76, 78, 79, 79, 80, 81, 81] },
-  ],
-  student: [
-    { label: "Attendance", value: "97%", delta: "+1%", trend: "up", icon: CalendarCheck2, accent: "success", spark: [92, 93, 94, 95, 96, 96, 97] },
-    { label: "Current GPA", value: "3.6", delta: "+0.1", trend: "up", icon: Trophy, accent: "primary", spark: [3.2, 3.3, 3.4, 3.5, 3.5, 3.6, 3.6].map((n) => n * 10) },
-    { label: "Assignments due", value: "4", delta: "-2", trend: "down", icon: ClipboardList, accent: "brand", spark: [8, 7, 6, 6, 5, 4, 4] },
-    { label: "Lessons today", value: "6", icon: BookOpen, accent: "info", spark: [6, 6, 6, 6, 6, 6, 6] },
-  ],
 };
 
 export function RoleDashboard({ role }: { role: AppRole }) {
-  const stats = useMemo(() => STATS[role], [role]);
+  // Delegate to dedicated portals for parent and student
+  if (role === "parent") return <ParentDashboard />;
+  if (role === "student") return <StudentDashboard />;
+
+  const stats = useMemo(() => STATS[role as keyof typeof STATS] ?? [], [role]);
 
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-6 p-4 sm:p-6 lg:p-8">

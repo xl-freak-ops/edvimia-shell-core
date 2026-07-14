@@ -3,6 +3,50 @@ name: Edvimia Architecture
 description: Full architectural reference for the Edvimia AI School OS — stack, auth, routing, DB schema, RLS, UI system, modules, and conventions. Use before implementing any feature.
 ---
 
+## NEW MODULES (added July 2026)
+
+### Communication Center (`/communication`)
+- Route: `src/routes/_authenticated/communication.tsx`
+- Hooks: `src/lib/communication/hooks.ts` (announcements, messages, notifications, homework)
+- Components: `src/components/communication/` (AnnouncementsPanel, InboxPanel, ComposeAnnouncementDialog, ComposeMessageDialog, NotificationsPanel, EmergencyAlertBanner, MessageTypeBadge)
+- Role-aware: admin/staff see full management UI; parents/students see read-only published view
+- RPC: `publish_announcement(id)` auto-notifies all targeted users; `link_parent_to_student(school, student, email)` for linking
+
+### Parent Portal (`/dashboard/parent`)
+- Hooks: `src/lib/parent/hooks.ts`
+- Components: `src/components/parent/` (ParentDashboard, ChildSelector, ChildAttendanceCard, ChildResultsCard, ChildFinanceCard, ParentAnnouncementsPanel, ParentMessagesPanel, ParentAISummary)
+- Data access: parent→student via `parent_student_links` table (`parent_user_id = auth.uid()`)
+- AI: `ParentAISummary` generates client-side insights from real attendance/results/finance data
+
+### Student Portal (`/dashboard/student`)
+- Hooks: `src/lib/student-portal/hooks.ts`
+- Components: `src/components/student-portal/` (StudentDashboard, StudentAttendancePanel, StudentResultsPanel, StudentTimetablePanel, StudentHomeworkPanel, StudentAnnouncementsPanel, StudentAIAssistant, StudentMessagesPanel)
+- Data access: student self-link also uses `parent_student_links` (same table, `relationship = 'self'` or admin-linked)
+- AI: `StudentAIAssistant` generates client-side study tips from results, attendance, homework
+
+### New DB Tables (migration 20260713000001)
+- `announcements` — type, target_roles[], is_emergency, is_published, scheduled_at
+- `announcement_reads` — tracks per-user read status
+- `messages` — direct messaging between school members
+- `homework` — assignments by class/arm/subject
+- `homework_submissions` — student submissions with grade/feedback
+- `parent_student_links` — links parent auth users to student records (ALSO used for student self-link)
+- `notifications` — in-app notifications auto-created on announcement publish
+- New RPCs: `publish_announcement`, `link_parent_to_student`
+- New helpers: `is_parent_of(student_id)`, `is_student_user(student_id)`
+
+### Sidebar (updated)
+- `src/components/layout/AppSidebar.tsx` is now role-aware
+- Parents see: Home, Announcements, Messages, Profile, Settings
+- Students see: Home, My Homework, Announcements, Messages, Profile, Settings
+- Staff/admin see: existing full nav
+- Footer shows role-appropriate branding copy
+
+### RoleDashboard (updated)
+- `parent` role → renders `<ParentDashboard />` (real data)
+- `student` role → renders `<StudentDashboard />` (real data)
+- All other roles → existing static stat cards unchanged
+
 # Edvimia Architecture Reference
 
 ## Stack
