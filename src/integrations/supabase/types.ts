@@ -3027,8 +3027,8 @@ export type Database = {
           user_id: string
           full_name: string | null
           email: string | null
-          avatar_url: string | null
           roles: Database["public"]["Enums"]["app_role"][]
+          created_at: string
         }[]
       }
       admin_assign_role: {
