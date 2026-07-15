@@ -100,7 +100,7 @@ export function StudentTimetablePanel({ classId, armId, schoolId }: Props) {
         <p className="text-[10px] opacity-70 mt-0.5">
           {formatTime(p.start_time as string)} – {formatTime(p.end_time as string)}
         </p>
-        {p.room && <p className="text-[10px] opacity-60">{p.room as string}</p>}
+        {(p.room as string | null) && <p className="text-[10px] opacity-60">{p.room as string}</p>}
       </div>
     );
   }

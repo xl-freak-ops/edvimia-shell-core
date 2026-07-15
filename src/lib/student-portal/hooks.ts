@@ -7,6 +7,8 @@ import type {
   Homework,
   HomeworkSubmission,
 } from "@/lib/communication/hooks";
+import { computeStudentResultRows } from "@/lib/results/calc";
+import { attachSenderProfiles } from "@/lib/communication/hooks";
 
 export type { Announcement, Message, Homework, HomeworkSubmission };
 
@@ -33,7 +35,7 @@ export interface AttendanceRecord {
   id: string;
   date: string;
   status: string;
-  note: string | null;
+  remark: string | null;
 }
 
 export interface StudentAttendanceSummary {
@@ -44,18 +46,7 @@ export interface StudentAttendanceSummary {
   pct: number;
 }
 
-export interface StudentResultRow {
-  meta_id: string;
-  subject_id: string;
-  subject_name: string;
-  term_id: string;
-  term_name: string;
-  is_current_term: boolean;
-  total: number;
-  grade: string | null;
-  position: number | null;
-  promotion_status: string | null;
-}
+export type { StudentResultSummaryRow as StudentResultRow } from "@/lib/results/calc";
 
 // ── Query keys ─────────────────────────────────────────────
 
@@ -107,7 +98,7 @@ export function useMyAttendance(studentId: string | null | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("attendance_records")
-        .select("id, date, status, note")
+        .select("id, date, status, remark")
         .eq("student_id", studentId!)
         .order("date", { ascending: false })
         .limit(180);
@@ -132,38 +123,7 @@ export function useMyResults(studentId: string | null | undefined, schoolId: str
   return useQuery({
     enabled: !!studentId && !!schoolId,
     queryKey: studentPortalKeys.results(studentId ?? ""),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("result_meta")
-        .select(`
-          id, total, grade, position, promotion_status,
-          result_sheets(
-            subject_id, term_id,
-            subjects(name),
-            terms(name, is_current)
-          )
-        `)
-        .eq("student_id", studentId!)
-        .eq("school_id", schoolId!);
-      if (error) throw error;
-      return (data ?? []).map((row: Record<string, unknown>) => {
-        const sheet = row.result_sheets as Record<string, unknown> | null;
-        const subject = sheet?.subjects as Record<string, unknown> | null;
-        const term = sheet?.terms as Record<string, unknown> | null;
-        return {
-          meta_id: row.id as string,
-          subject_id: sheet?.subject_id as string,
-          subject_name: (subject?.name as string) ?? "Unknown",
-          term_id: sheet?.term_id as string,
-          term_name: (term?.name as string) ?? "Unknown",
-          is_current_term: (term?.is_current as boolean) ?? false,
-          total: row.total as number,
-          grade: row.grade as string | null,
-          position: row.position as number | null,
-          promotion_status: row.promotion_status as string | null,
-        } as StudentResultRow;
-      });
-    },
+    queryFn: async () => computeStudentResultRows(studentId!, schoolId!),
   });
 }
 
@@ -251,13 +211,13 @@ export function useMyAnnouncements(schoolId: string | null | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
-        .select("*, profiles(full_name)")
+        .select("*")
         .eq("school_id", schoolId!)
         .eq("is_published", true)
         .order("is_emergency", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
-      const rows = (data ?? []) as AnnouncementWithSender[];
+      const rows = await attachSenderProfiles((data ?? []) as Announcement[]);
       return rows.filter(
         (a) => a.target_roles.length === 0 || a.target_roles.includes("student")
       );

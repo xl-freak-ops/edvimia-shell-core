@@ -22,7 +22,7 @@ const schema = z.object({
   recipient_id: z.string().min(1, "Recipient ID is required"),
   subject: z.string().optional(),
   body: z.string().min(2, "Message body is required"),
-  message_type: z.string().default("general"),
+  message_type: z.string(),
 });
 
 type FormValues = z.infer<typeof schema>;

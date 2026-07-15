@@ -130,7 +130,7 @@ export function StudentHomeworkPanel({ studentId, classId, armId, schoolId }: Pr
 
         {isOpen && (
           <div className="border-t px-3.5 pb-3.5 pt-3 space-y-3">
-            {hw.description && (
+            {(hw.description as string | null) && (
               <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {hw.description as string}
               </p>

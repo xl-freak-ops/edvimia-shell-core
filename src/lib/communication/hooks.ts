@@ -133,6 +133,25 @@ export const communicationKeys = {
 
 // ── Announcement hooks ─────────────────────────────────────
 
+/**
+ * announcements.sender_id references auth.users, not public.profiles directly,
+ * so PostgREST cannot embed `profiles(...)` on this table. Fetch sender names
+ * in a second query and merge them in instead.
+ */
+export async function attachSenderProfiles(rows: Announcement[]): Promise<AnnouncementWithSender[]> {
+  const senderIds = Array.from(new Set(rows.map((r) => r.sender_id).filter((id): id is string => !!id)));
+  if (senderIds.length === 0) {
+    return rows.map((r) => ({ ...r, profiles: null }));
+  }
+  const { data: profiles, error } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", senderIds);
+  if (error) throw error;
+  const byId = new Map((profiles ?? []).map((p) => [p.id, { full_name: p.full_name }]));
+  return rows.map((r) => ({ ...r, profiles: r.sender_id ? byId.get(r.sender_id) ?? null : null }));
+}
+
 export function useAllAnnouncements(schoolId: string | null | undefined) {
   return useQuery({
     enabled: !!schoolId,
@@ -140,11 +159,11 @@ export function useAllAnnouncements(schoolId: string | null | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
-        .select("*, profiles(full_name)")
+        .select("*")
         .eq("school_id", schoolId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as AnnouncementWithSender[];
+      return attachSenderProfiles((data ?? []) as Announcement[]);
     },
   });
 }
@@ -156,14 +175,14 @@ export function usePublishedAnnouncements(schoolId: string | null | undefined, t
     queryFn: async () => {
       let q = supabase
         .from("announcements")
-        .select("*, profiles(full_name)")
+        .select("*")
         .eq("school_id", schoolId!)
         .eq("is_published", true)
         .order("is_emergency", { ascending: false })
         .order("created_at", { ascending: false });
       const { data, error } = await q;
       if (error) throw error;
-      const rows = (data ?? []) as AnnouncementWithSender[];
+      const rows = await attachSenderProfiles((data ?? []) as Announcement[]);
       if (!targetRoles || targetRoles.length === 0) return rows;
       return rows.filter(
         (a) => a.target_roles.length === 0 || a.target_roles.some((r) => targetRoles.includes(r))

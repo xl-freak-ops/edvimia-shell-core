@@ -26,9 +26,9 @@ import {
 const schema = z.object({
   title: z.string().min(3, "Title is required"),
   body: z.string().min(10, "Body must be at least 10 characters"),
-  type: z.string().default("announcement"),
-  target_roles: z.array(z.string()).default([]),
-  is_emergency: z.boolean().default(false),
+  type: z.string(),
+  target_roles: z.array(z.string()),
+  is_emergency: z.boolean(),
   scheduled_at: z.string().optional(),
 });
 

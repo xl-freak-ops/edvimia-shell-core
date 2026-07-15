@@ -1,4 +1,5 @@
 import type { Tables } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Component = Tables<"assessment_components">;
 export type Score = Tables<"result_scores">;
@@ -99,4 +100,103 @@ export function validateScore(v: number, max: number): string | null {
   if (v < 0) return "Cannot be negative";
   if (v > max) return `Max is ${max}`;
   return null;
+}
+
+export type StudentResultSummaryRow = {
+  meta_id: string;
+  subject_id: string;
+  subject_name: string;
+  term_id: string;
+  term_name: string;
+  is_current_term: boolean;
+  total: number;
+  grade: string | null;
+  position: number | null;
+  promotion_status: string | null;
+};
+
+/**
+ * Compute a single student's published result rows (one per subject sheet)
+ * directly from result_scores + assessment_components + grade_scales.
+ * result_meta does not store per-subject totals/grades/positions — those are
+ * always derived client-side, same as the teacher-facing results workflow.
+ */
+export async function computeStudentResultRows(
+  studentId: string,
+  schoolId: string,
+): Promise<StudentResultSummaryRow[]> {
+  const [{ data: sheets, error: sheetsErr }, { data: components, error: compErr }, { data: scale, error: scaleErr }] =
+    await Promise.all([
+      supabase
+        .from("result_sheets")
+        .select("id, subject_id, term_id, status, subjects(name), terms(name, is_current)")
+        .eq("school_id", schoolId)
+        .eq("status", "published"),
+      supabase.from("assessment_components").select("*").eq("school_id", schoolId),
+      supabase.from("grade_scales").select("*").eq("school_id", schoolId),
+    ]);
+  if (sheetsErr) throw sheetsErr;
+  if (compErr) throw compErr;
+  if (scaleErr) throw scaleErr;
+
+  const sheetRows = (sheets ?? []) as Array<{
+    id: string;
+    subject_id: string | null;
+    term_id: string | null;
+    subjects: { name: string } | null;
+    terms: { name: string; is_current: boolean } | null;
+  }>;
+  if (sheetRows.length === 0) return [];
+
+  const { data: scores, error: scoresErr } = await supabase
+    .from("result_scores")
+    .select("*")
+    .in("sheet_id", sheetRows.map((s) => s.id));
+  if (scoresErr) throw scoresErr;
+
+  const comps = (components ?? []) as Component[];
+  const gradeScale = (scale ?? []) as GradeScale[];
+  const allScores = (scores ?? []) as Score[];
+
+  const rows: StudentResultSummaryRow[] = [];
+  for (const sheet of sheetRows) {
+    const sheetScores = allScores.filter((s) => s.sheet_id === sheet.id);
+    const myScores = sheetScores.filter((s) => s.student_id === studentId);
+    if (myScores.length === 0) continue;
+
+    const { percentage } = computeStudentTotal(myScores, comps);
+    const { grade } = resolveGrade(percentage, gradeScale);
+
+    // Rank against every student on the same sheet ("1224" ranking).
+    const studentIds = Array.from(new Set(sheetScores.map((s) => s.student_id)));
+    const totals = studentIds.map((sid) => ({
+      sid,
+      pct: computeStudentTotal(sheetScores.filter((s) => s.student_id === sid), comps).percentage,
+    }));
+    totals.sort((a, b) => b.pct - a.pct);
+    let lastPct = -1;
+    let lastPos = 0;
+    let myPosition: number | null = null;
+    totals.forEach((t, i) => {
+      if (t.pct !== lastPct) {
+        lastPos = i + 1;
+        lastPct = t.pct;
+      }
+      if (t.sid === studentId) myPosition = t.pct > 0 ? lastPos : null;
+    });
+
+    rows.push({
+      meta_id: sheet.id,
+      subject_id: sheet.subject_id ?? "",
+      subject_name: sheet.subjects?.name ?? "Unknown",
+      term_id: sheet.term_id ?? "",
+      term_name: sheet.terms?.name ?? "Unknown",
+      is_current_term: sheet.terms?.is_current ?? false,
+      total: percentage,
+      grade,
+      position: myPosition,
+      promotion_status: null,
+    });
+  }
+  return rows;
 }

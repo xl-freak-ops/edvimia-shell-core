@@ -1,64 +1,78 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { Loader2, CalendarCheck2 } from "lucide-react";
+import { useAttendanceRange } from "@/lib/attendance/hooks";
+import { buildAttendanceTrend, attendanceRateSummary } from "@/lib/dashboard/format";
+import { EmptyState } from "@/components/school/EmptyState";
 
-const data = [
-  { day: "Mon", present: 92, absent: 8 },
-  { day: "Tue", present: 95, absent: 5 },
-  { day: "Wed", present: 88, absent: 12 },
-  { day: "Thu", present: 96, absent: 4 },
-  { day: "Fri", present: 90, absent: 10 },
-  { day: "Sat", present: 78, absent: 22 },
-  { day: "Sun", present: 0, absent: 0 },
-];
+function last7Days() {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - 6);
+  return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+}
 
-export function AttendanceChart() {
+export function AttendanceChart({ schoolId }: { schoolId: string | null | undefined }) {
+  const { from, to } = last7Days();
+  const { data: records = [], isLoading } = useAttendanceRange(schoolId, from, to);
+
+  if (isLoading) {
+    return (
+      <Card className="rounded-2xl border-border/70 shadow-soft">
+        <CardContent className="flex h-56 items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const trend = buildAttendanceTrend(records, from, to);
+  const { avgRate, studentsTracked } = attendanceRateSummary(records);
+
   return (
     <Card className="rounded-2xl border-border/70 shadow-soft">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div>
           <CardTitle className="text-base font-semibold">Weekly attendance</CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">
-            Average <span className="font-semibold text-foreground">91.4%</span> · 1,284 students tracked
+            {records.length > 0 ? (
+              <>
+                Average <span className="font-semibold text-foreground">{avgRate}%</span> · {studentsTracked} students tracked
+              </>
+            ) : (
+              "No attendance recorded this week"
+            )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {records.length > 0 && (
           <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-primary" /> Present
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/40" /> Absent
+              <span className="h-2 w-2 rounded-full bg-primary" /> Present rate
             </span>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </div>
+        )}
       </CardHeader>
       <CardContent className="pt-4">
-        <div className="flex h-48 items-end gap-3 sm:gap-5">
-          {data.map((d) => {
-            const total = d.present + d.absent || 1;
-            return (
-              <div key={d.day} className="group flex h-full flex-1 flex-col items-center gap-2">
+        {records.length === 0 ? (
+          <EmptyState
+            icon={CalendarCheck2}
+            title="No attendance data yet"
+            description="Once attendance is marked for this school, weekly trends will appear here."
+          />
+        ) : (
+          <div className="flex h-48 items-end gap-3 sm:gap-5">
+            {trend.map((d) => (
+              <div key={d.label} className="group flex h-full flex-1 flex-col items-center gap-2">
                 <div className="relative flex h-full w-full max-w-[44px] items-end justify-center overflow-hidden rounded-lg bg-muted/40 transition-colors group-hover:bg-muted/70">
                   <div
                     className="w-full rounded-lg bg-gradient-to-t from-primary to-primary/70 transition-all duration-500"
-                    style={{ height: `${d.present}%` }}
+                    style={{ height: `${d.rate}%` }}
                   />
-                  {d.absent > 0 && (
-                    <div
-                      className="absolute inset-x-0 top-0 w-full bg-muted-foreground/20"
-                      style={{ height: `${100 - d.present}%` }}
-                    />
-                  )}
                 </div>
-                <span className="text-[11px] font-medium text-muted-foreground">{d.day}</span>
+                <span className="text-[11px] font-medium text-muted-foreground">{d.label}</span>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
