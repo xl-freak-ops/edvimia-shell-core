@@ -1,2 +1,6 @@
 - [Edvimia Architecture](edvimia-architecture.md) — full stack, auth, routing, DB schema, RLS, UI system, modules, conventions. Read before any feature work.
 - [Supabase DB access from Replit](supabase-db-access.md) — direct DB host is IPv6-only (unreachable); use the pooler connection string instead.
+- [PostgREST embed pitfall](postgrest-embed-pitfall.md) — columns referencing auth.users cannot be PostgREST-embedded; use a manual second query instead.
+- [Zod default + useForm type mismatch](zod-useform-pitfall.md) — zod .default() on fields breaks zodResolver type compatibility; use required fields + defaultValues instead.
+- [Deployment setup](deployment-setup.md) — Nitro preset must be "node" for Replit; build outputs to .output/server/index.mjs; reads PORT env var.
+- [DB/types.ts drift](db-types-drift.md) — live DB functions can exist without a migration file; always cross-check pg_proc against supabase/migrations/ when adding new RPCs.

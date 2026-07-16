@@ -12,6 +12,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  nitro: {
+    // Use the Node.js preset for Replit deployment (outputs .output/server/index.mjs)
+    preset: "node",
+  },
   vite: {
     server: {
       port: 5000,

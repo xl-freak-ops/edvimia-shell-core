@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AlertCircle, Building2, Calendar, Settings as SettingsIcon, BookOpen, Award, Sparkles, Loader2 } from "lucide-react";
+import { AlertCircle, Building2, Calendar, Settings as SettingsIcon, BookOpen, Award, Sparkles, Loader2, ShieldCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { AcademicsPanel } from "@/components/school/AcademicsPanel";
 import { SubjectsPanel } from "@/components/school/SubjectsPanel";
 import { GradingPanel } from "@/components/school/GradingPanel";
 import { SettingsPanel } from "@/components/school/SettingsPanel";
+import { RolesPanel } from "@/components/school/RolesPanel";
 import { seedDemoSchoolData } from "@/lib/school/seed";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -83,6 +84,7 @@ function SchoolPage() {
           <TabsTrigger value="subjects" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Subjects</TabsTrigger>
           <TabsTrigger value="grading" className="gap-1.5"><Award className="h-3.5 w-3.5" /> Grading</TabsTrigger>
           <TabsTrigger value="settings" className="gap-1.5"><SettingsIcon className="h-3.5 w-3.5" /> Settings</TabsTrigger>
+          <TabsTrigger value="roles" className="gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Roles</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-5"><ProfileForm school={school.data} /></TabsContent>
@@ -90,6 +92,7 @@ function SchoolPage() {
         <TabsContent value="subjects" className="space-y-5"><SubjectsPanel schoolId={schoolId} /></TabsContent>
         <TabsContent value="grading" className="space-y-5"><GradingPanel schoolId={schoolId} /></TabsContent>
         <TabsContent value="settings" className="space-y-5"><SettingsPanel schoolId={schoolId} /></TabsContent>
+        <TabsContent value="roles" className="space-y-5"><RolesPanel schoolId={schoolId} /></TabsContent>
       </Tabs>
     </div>
   );
