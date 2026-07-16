@@ -121,12 +121,14 @@ async function provisionAccess(
     { onConflict: "id" },
   );
 
-  // Insert subject_teacher role scoped to the school (ignore if already present).
+  // Insert subject_teacher role scoped to the school (ignore duplicates).
   // school_id must be set so is_school_member() RLS checks pass for this user.
-  await admin.from("user_roles")
-    .insert({ user_id: userId, role: "subject_teacher", school_id })
-    .throwOnError()
-    .catch(() => {/* duplicate — fine */});
+  try {
+    await admin.from("user_roles")
+      .insert({ user_id: userId, role: "subject_teacher", school_id });
+  } catch {
+    // duplicate row — fine
+  }
 }
 
 function json(payload: unknown, status = 200) {
