@@ -121,11 +121,10 @@ async function provisionAccess(
     { onConflict: "id" },
   );
 
-  // Insert subject_teacher role (ignore if already present).
-  // "teacher" is not a valid app_role value; subject_teacher is the correct
-  // default for invited staff.
+  // Insert subject_teacher role scoped to the school (ignore if already present).
+  // school_id must be set so is_school_member() RLS checks pass for this user.
   await admin.from("user_roles")
-    .insert({ user_id: userId, role: "subject_teacher" })
+    .insert({ user_id: userId, role: "subject_teacher", school_id })
     .throwOnError()
     .catch(() => {/* duplicate — fine */});
 }
