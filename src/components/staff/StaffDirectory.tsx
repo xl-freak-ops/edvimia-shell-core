@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import {
   Search,
   Download,
@@ -9,6 +10,7 @@ import {
   FileSpreadsheet,
   FileText,
   Eye,
+  Trash2,
   Users as UsersIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,10 +26,16 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/school/EmptyState";
 import { StaffStatusBadge, POSITION_LABELS } from "./StaffStatusBadge";
 import type { Tables } from "@/integrations/supabase/types";
 import { exportStaffCsv, exportStaffExcel } from "@/lib/staff/export";
+import { useDeleteStaff } from "@/lib/staff/hooks";
+import { useAuth } from "@/lib/auth/AuthProvider";
 
 type Row = Tables<"staff">;
 
@@ -39,11 +47,26 @@ const PAGE_SIZE = 15;
 
 export function StaffDirectory({ staff }: { staff: Row[] }) {
   const navigate = useNavigate();
+  const { school } = useAuth();
+  const deleteStaff = useDeleteStaff(school?.id ?? "");
   const [q, setQ] = useState("");
   const [positionFilter, setPositionFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [deptFilter, setDeptFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
+  const [pendingDelete, setPendingDelete] = useState<Row | null>(null);
+
+  async function handleDelete() {
+    if (!pendingDelete) return;
+    try {
+      await deleteStaff.mutateAsync(pendingDelete.id);
+      toast.success(`${pendingDelete.full_name} has been removed`);
+    } catch (err) {
+      toast.error("Failed to delete staff member", { description: err instanceof Error ? err.message : "Unexpected error." });
+    } finally {
+      setPendingDelete(null);
+    }
+  }
 
   const departments = useMemo(() => {
     const set = new Set<string>();
@@ -71,6 +94,27 @@ export function StaffDirectory({ staff }: { staff: Row[] }) {
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
+    <>
+    <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {pendingDelete?.full_name}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently remove this staff member from the directory. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleDelete}
+            disabled={deleteStaff.isPending}
+          >
+            {deleteStaff.isPending ? "Deleting…" : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <Card className="shadow-soft">
       <CardContent className="p-4 md:p-6">
         {/* Toolbar */}
@@ -210,6 +254,13 @@ export function StaffDirectory({ staff }: { staff: Row[] }) {
                                 <Eye className="mr-2 h-4 w-4" /> View profile
                               </Link>
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => setPendingDelete(s)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -237,5 +288,6 @@ export function StaffDirectory({ staff }: { staff: Row[] }) {
         )}
       </CardContent>
     </Card>
+    </>
   );
 }

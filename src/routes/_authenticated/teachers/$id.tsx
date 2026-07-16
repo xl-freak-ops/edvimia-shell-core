@@ -1,11 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, Mail, Phone, MapPin, Briefcase, GraduationCap } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, Loader2, Mail, Phone, MapPin, Briefcase, GraduationCap, Send, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useStaff } from "@/lib/staff/hooks";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useStaff, useInviteStaff, useDeleteStaff } from "@/lib/staff/hooks";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { StaffStatusBadge, POSITION_LABELS } from "@/components/staff/StaffStatusBadge";
 import { StaffAssignmentsPanel } from "@/components/staff/StaffAssignmentsPanel";
@@ -19,7 +25,11 @@ export const Route = createFileRoute("/_authenticated/teachers/$id")({
 function StaffProfilePage() {
   const { id } = Route.useParams();
   const { school } = useAuth();
+  const navigate = useNavigate();
   const { data: s, isLoading } = useStaff(id);
+  const invite = useInviteStaff();
+  const deleteStaff = useDeleteStaff(school?.id ?? "");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   if (isLoading || !s) {
     return (
@@ -33,6 +43,34 @@ function StaffProfilePage() {
 
   const initials = s.full_name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 
+  async function handleResendInvite() {
+    if (!s?.email || !school?.id) return;
+    try {
+      const result = await invite.mutateAsync({
+        email: s.email,
+        full_name: s.full_name,
+        school_id: school.id,
+      });
+      if (result.invited) {
+        toast.success("Invitation sent", { description: `A new invite email has been sent to ${s.email}.` });
+      } else {
+        toast.success("Access confirmed", { description: `${s.email} already has an account — teacher access is active.` });
+      }
+    } catch (err) {
+      toast.error("Failed to resend invitation", { description: err instanceof Error ? err.message : "Unexpected error." });
+    }
+  }
+
+  async function handleDelete() {
+    try {
+      await deleteStaff.mutateAsync(s!.id);
+      toast.success("Staff member deleted");
+      navigate({ to: "/teachers" });
+    } catch (err) {
+      toast.error("Failed to delete staff member", { description: err instanceof Error ? err.message : "Unexpected error." });
+    }
+  }
+
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
@@ -40,7 +78,50 @@ function StaffProfilePage() {
           <Button variant="ghost" size="sm" asChild className="gap-2">
             <Link to="/teachers"><ArrowLeft className="h-4 w-4" /> Back to Staff</Link>
           </Button>
+          <div className="flex items-center gap-2">
+            {s.email && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={invite.isPending}
+                onClick={handleResendInvite}
+              >
+                {invite.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Resend Invitation
+              </Button>
+            )}
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Delete Teacher
+            </Button>
+          </div>
         </div>
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {s.full_name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently remove this staff member from the directory. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleDelete}
+                disabled={deleteStaff.isPending}
+              >
+                {deleteStaff.isPending ? "Deleting…" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <Card className="shadow-soft">
           <CardContent className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between">
