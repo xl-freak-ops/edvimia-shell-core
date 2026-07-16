@@ -155,7 +155,19 @@ export function useInviteStaff() {
           redirect_to: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) throw error;
+      if (error) {
+        // Extract the real error message from the Edge Function response body
+        // rather than surfacing the generic "non-2xx status code" string.
+        let message = error.message;
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const body = await (error as any).context?.json?.();
+          if (body?.error) message = body.error;
+        } catch {
+          // ignore parse failure — fall back to the original message
+        }
+        throw new Error(message);
+      }
       if (data?.error) throw new Error(data.error as string);
       return data as { ok: boolean; invited: boolean };
     },
