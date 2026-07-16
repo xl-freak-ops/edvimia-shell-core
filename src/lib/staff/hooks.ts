@@ -130,6 +130,38 @@ export function useCreateStaff(schoolId: string) {
   });
 }
 
+/**
+ * Sends an email invite to a staff member via the invite-staff edge function.
+ * The edge function uses the service-role key to call
+ * auth.admin.inviteUserByEmail and pre-provisions the teacher's profile
+ * (school_id) and role so they land on the right dashboard on first login.
+ */
+export function useInviteStaff() {
+  return useMutation({
+    mutationFn: async ({
+      email,
+      full_name,
+      school_id,
+    }: {
+      email: string;
+      full_name: string;
+      school_id: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke("invite-staff", {
+        body: {
+          email,
+          full_name,
+          school_id,
+          redirect_to: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error as string);
+      return data as { ok: boolean; invited: boolean };
+    },
+  });
+}
+
 export function useUpdateStaff(schoolId: string) {
   const qc = useQueryClient();
   return useMutation({

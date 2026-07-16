@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   useCreateStaff,
+  useInviteStaff,
   uploadStaffAsset,
   generateStaffCode,
   suggestUsername,
@@ -87,6 +88,7 @@ export function StaffWizard() {
   const { school } = useAuth();
   const schoolId = school?.id ?? "";
   const create = useCreateStaff(schoolId);
+  const invite = useInviteStaff();
 
   const [step, setStep] = useState(0);
   const [state, setState] = useState<State>(empty);
@@ -140,7 +142,38 @@ export function StaffWizard() {
         photo_url: photoUrl,
       };
       const created = await create.mutateAsync(payload);
-      toast.success("Staff member added");
+
+      // Send email invite so the staff member can set a password and log in.
+      // Skip silently if no email was provided.
+      const emailAddr = state.email.trim();
+      if (emailAddr) {
+        try {
+          const result = await invite.mutateAsync({
+            email: emailAddr,
+            full_name: state.full_name.trim(),
+            school_id: schoolId,
+          });
+          if (result.invited) {
+            toast.success("Staff member added", {
+              description: `An invite email has been sent to ${emailAddr}.`,
+            });
+          } else {
+            toast.success("Staff member added", {
+              description: `${emailAddr} already has an account — teacher access has been granted.`,
+            });
+          }
+        } catch (inviteErr) {
+          // Don't block the user — record was saved; show a non-fatal warning
+          toast.warning("Staff member saved, but invite failed", {
+            description: inviteErr instanceof Error ? inviteErr.message : "Could not send invite email.",
+          });
+        }
+      } else {
+        toast.success("Staff member added", {
+          description: "No email provided — invite skipped. You can grant access later from the profile page.",
+        });
+      }
+
       navigate({ to: "/teachers/$id", params: { id: created.id } });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to create staff");
@@ -275,7 +308,7 @@ export function StaffWizard() {
                 </Select>
               </div>
               <div className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground md:col-span-2">
-                A login account will be provisioned when the staff member accepts the email invite. You can also grant roles from the profile page.
+                If an email address was entered in Step 2, an invite will be sent automatically when you save. The staff member clicks the link to set their password and access their dashboard. If no email was provided, you can grant access later from the Roles tab in School Settings.
               </div>
             </div>
           )}

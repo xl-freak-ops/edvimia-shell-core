@@ -18,6 +18,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AccessDeniedRouteImport } from './routes/access-denied'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedTimetableRouteImport } from './routes/_authenticated/timetable'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSchoolHealthRouteImport } from './routes/_authenticated/school-health'
@@ -82,6 +83,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTimetableRoute = AuthenticatedTimetableRouteImport.update({
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/school-health': typeof AuthenticatedSchoolHealthRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/timetable': typeof AuthenticatedTimetableRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/students/new': typeof AuthenticatedStudentsNewRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/school-health': typeof AuthenticatedSchoolHealthRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/timetable': typeof AuthenticatedTimetableRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/students/new': typeof AuthenticatedStudentsNewRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/_authenticated/school-health': typeof AuthenticatedSchoolHealthRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/timetable': typeof AuthenticatedTimetableRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/dashboard/$role': typeof AuthenticatedDashboardRoleRoute
   '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
   '/_authenticated/students/new': typeof AuthenticatedStudentsNewRoute
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/school-health'
     | '/settings'
     | '/timetable'
+    | '/auth/callback'
     | '/dashboard/$role'
     | '/students/$id'
     | '/students/new'
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/school-health'
     | '/settings'
     | '/timetable'
+    | '/auth/callback'
     | '/dashboard/$role'
     | '/students/$id'
     | '/students/new'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/_authenticated/school-health'
     | '/_authenticated/settings'
     | '/_authenticated/timetable'
+    | '/auth/callback'
     | '/_authenticated/dashboard/$role'
     | '/_authenticated/students/$id'
     | '/_authenticated/students/new'
@@ -402,6 +414,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   WelcomeRoute: typeof WelcomeRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -467,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/timetable': {
@@ -681,6 +701,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   WelcomeRoute: WelcomeRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

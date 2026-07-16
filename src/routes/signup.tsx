@@ -104,7 +104,7 @@ function SignupPage() {
         email: form.adminEmail,
         password: form.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard/school-admin`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: form.adminName,
             phone: form.adminPhone,
