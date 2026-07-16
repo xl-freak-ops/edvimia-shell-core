@@ -147,29 +147,35 @@ export function useInviteStaff() {
       full_name: string;
       school_id: string;
     }) => {
-      const { data, error } = await supabase.functions.invoke("invite-staff", {
-        body: {
+      // Use a raw fetch so we can read the response body before deciding
+      // whether to throw. The Supabase JS functions client swallows the body
+      // inside FunctionsHttpError and doesn't expose it reliably.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/invite-staff`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: supabaseKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           email,
           full_name,
           school_id,
           redirect_to: `${window.location.origin}/auth/callback`,
-        },
+        }),
       });
-      if (error) {
-        // Extract the real error message from the Edge Function response body
-        // rather than surfacing the generic "non-2xx status code" string.
-        let message = error.message;
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const body = await (error as any).context?.json?.();
-          if (body?.error) message = body.error;
-        } catch {
-          // ignore parse failure — fall back to the original message
-        }
-        throw new Error(message);
-      }
-      if (data?.error) throw new Error(data.error as string);
-      return data as { ok: boolean; invited: boolean };
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? `Invite failed (${res.status})`);
+      return body as { ok: boolean; invited: boolean };
     },
   });
 }
