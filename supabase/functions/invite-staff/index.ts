@@ -74,7 +74,10 @@ Deno.serve(async (req) => {
     const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(
       email,
       {
-        data: { full_name: full_name ?? null, school_id, initial_role: "teacher" },
+        // "teacher" was removed from app_role; subject_teacher is the correct
+        // default for invited staff. The trigger casts this value, so it must
+        // be a valid enum member.
+        data: { full_name: full_name ?? null, school_id, initial_role: "subject_teacher" },
         ...(redirect_to ? { redirectTo: redirect_to } : {}),
       },
     );
@@ -118,9 +121,11 @@ async function provisionAccess(
     { onConflict: "id" },
   );
 
-  // Insert teacher role (ignore if already present)
+  // Insert subject_teacher role (ignore if already present).
+  // "teacher" is not a valid app_role value; subject_teacher is the correct
+  // default for invited staff.
   await admin.from("user_roles")
-    .insert({ user_id: userId, role: "teacher" })
+    .insert({ user_id: userId, role: "subject_teacher" })
     .throwOnError()
     .catch(() => {/* duplicate — fine */});
 }
