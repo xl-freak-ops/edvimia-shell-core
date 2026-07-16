@@ -44,14 +44,18 @@ Deno.serve(async (req) => {
     if (!email)     return json({ error: "email is required" }, 400);
     if (!school_id) return json({ error: "school_id is required" }, 400);
 
-    // Confirm caller is a school_admin or super_admin
-    const { data: roleRow } = await admin
+    // Confirm caller is a school_admin or super_admin.
+    // Use limit(1) instead of maybeSingle() — the latter throws when a user
+    // has both a null-school_id row and a scoped row, returning null data
+    // and incorrectly triggering the 403.
+    const { data: roleRows } = await admin
       .from("user_roles")
       .select("role")
       .eq("user_id", callerId)
       .in("role", ["school_admin", "super_admin"])
-      .maybeSingle();
+      .limit(1);
 
+    const roleRow = roleRows?.[0] ?? null;
     if (!roleRow) return json({ error: "Forbidden: not a school admin" }, 403);
 
     // For school_admin, also confirm they belong to this specific school
