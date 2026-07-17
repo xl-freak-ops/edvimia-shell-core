@@ -27,40 +27,6 @@ export function ProfileForm({ school }: { school: Tables<"schools"> }) {
     setDirty(false);
   }, [school.id]);
 
-  // Autosave (debounced) when dirty
-  useEffect(() => {
-    if (!dirty) return;
-    const t = setTimeout(() => {
-      update.mutate(
-        {
-          name: form.name,
-          motto: form.motto,
-          school_type: form.school_type,
-          email: form.email,
-          phone: form.phone,
-          website: form.website,
-          address: form.address,
-          country: form.country,
-          state: form.state,
-          lga: form.lga,
-          principal_name: form.principal_name,
-          vice_principal_name: form.vice_principal_name,
-          administrator_name: form.administrator_name,
-          school_time_start: form.school_time_start,
-          school_time_end: form.school_time_end,
-          primary_color: form.primary_color,
-          secondary_color: form.secondary_color,
-          timezone: form.timezone,
-          currency: form.currency,
-          resumption_date: form.resumption_date,
-          closing_date: form.closing_date,
-        },
-        { onSuccess: () => setDirty(false) },
-      );
-    }, 900);
-    return () => clearTimeout(t);
-  }, [form, dirty, update]);
-
   const set = <K extends keyof Tables<"schools">>(k: K, v: Tables<"schools">[K]) => {
     setForm((f) => ({ ...f, [k]: v }));
     setDirty(true);
