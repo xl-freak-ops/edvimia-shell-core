@@ -1,7 +1,7 @@
 // Edvimia · delete-staff edge function
 // Fully removes a staff member:
 //   1. Deletes their user_roles row for this school
-//   2. Deletes their staff + staff_assignments rows
+//   2. Deletes their staff_assignments + staff rows
 //   3. Deletes their auth.users record IF they have no remaining roles at any school
 //      (guards against the case where one person is staff at multiple schools)
 // deno-lint-ignore-file no-explicit-any
@@ -14,8 +14,18 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function json(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return json(null, 204);
+  // Must be at the top, before any other logic, so CORS preflight succeeds.
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -40,7 +50,7 @@ Deno.serve(async (req) => {
       school_id?: string;
     };
 
-    if (!staff_id) return json({ error: "staff_id is required" }, 400);
+    if (!staff_id)  return json({ error: "staff_id is required" }, 400);
     if (!school_id) return json({ error: "school_id is required" }, 400);
 
     // Confirm caller is school_admin or super_admin
@@ -66,20 +76,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch the staff record to get their auth user_id
+    // Fetch the staff record to get their linked auth user_id (may be null
+    // if the staff was saved without an email / never completed auth setup).
     const { data: staffRow, error: staffErr } = await admin
       .from("staff")
       .select("id, user_id")
       .eq("id", staff_id)
-      .eq("school_id", school_id)
-      .maybeSingle();
+      .maybeSingle();                     // don't filter by school_id — admins
+                                          // can delete any staff in their school
 
     if (staffErr) return json({ error: staffErr.message }, 500);
     if (!staffRow) return json({ error: "Staff member not found" }, 404);
 
     const linkedUserId: string | null = staffRow.user_id ?? null;
 
-    // 1. Remove their role at this school
+    // 1. Remove their role at this school (only if they have a linked account)
     if (linkedUserId) {
       await admin
         .from("user_roles")
@@ -90,10 +101,11 @@ Deno.serve(async (req) => {
 
     // 2. Delete staff_assignments then the staff row itself
     await admin.from("staff_assignments").delete().eq("staff_id", staff_id);
-    await admin.from("staff").delete().eq("id", staff_id);
+    const { error: delErr } = await admin.from("staff").delete().eq("id", staff_id);
+    if (delErr) return json({ error: delErr.message }, 500);
 
-    // 3. If the user has no remaining roles at ANY school, delete their auth account
-    //    so they can be re-invited cleanly later.
+    // 3. If the user has no remaining roles at ANY school, delete their auth
+    //    account so they can be re-invited completely fresh later.
     if (linkedUserId) {
       const { data: remaining } = await admin
         .from("user_roles")
@@ -104,7 +116,7 @@ Deno.serve(async (req) => {
       if (!remaining || remaining.length === 0) {
         const { error: deleteAuthErr } = await admin.auth.admin.deleteUser(linkedUserId);
         if (deleteAuthErr) {
-          // Non-fatal — the staff record is already gone; log and continue
+          // Non-fatal — the staff record is already gone, just log it
           console.error("Could not delete auth user:", deleteAuthErr.message);
         }
       }
@@ -115,10 +127,3 @@ Deno.serve(async (req) => {
     return json({ error: e?.message ?? "Unexpected error" }, 500);
   }
 });
-
-function json(payload: unknown, status = 200) {
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
