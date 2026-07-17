@@ -14,6 +14,15 @@ const SCHOOL_TYPES = ["nursery", "primary", "secondary", "college", "mixed"] as 
 const CURRENCIES = ["NGN", "USD", "GHS", "KES", "ZAR", "EUR", "GBP"];
 const TIMEZONES = ["Africa/Lagos", "Africa/Accra", "Africa/Nairobi", "Africa/Johannesburg", "UTC", "Europe/London"];
 
+function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
 export function ProfileForm({ school }: { school: Tables<"schools"> }) {
   const update = useUpdateSchool(school.id);
   const [form, setForm] = useState(school);
@@ -31,13 +40,6 @@ export function ProfileForm({ school }: { school: Tables<"schools"> }) {
     setForm((f) => ({ ...f, [k]: v }));
     setDirty(true);
   };
-
-  const Field = ({ id, label, children }: { id: string; label: string; children: React.ReactNode }) => (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
-      {children}
-    </div>
-  );
 
   return (
     <div className="space-y-5">
