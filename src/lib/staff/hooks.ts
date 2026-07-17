@@ -222,9 +222,31 @@ export function useUpdateStaff(schoolId: string) {
 export function useDeleteStaff(schoolId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("staff").delete().eq("id", id);
-      if (error) throw error;
+    mutationFn: async (staffId: string) => {
+      // Use the delete-staff Edge Function so the auth user and user_roles are
+      // fully cleaned up server-side.  A plain .delete() on the staff table
+      // left the auth.users + user_roles rows behind, meaning the same person
+      // could never be re-invited fresh.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/delete-staff`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: supabaseKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ staff_id: staffId, school_id: schoolId }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? `Delete failed (${res.status})`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: staffKeys.list(schoolId) }),
   });
