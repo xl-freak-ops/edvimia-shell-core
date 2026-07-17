@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Wallet, Receipt, Layers, Settings2, TrendingDown, Lock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useSessions, useTerms, useSchool } from "@/lib/school/hooks";
 import {
@@ -43,22 +44,25 @@ function FinancePage() {
 
   if (!canViewFinance) {
     return (
-      <div className="flex h-[70vh] flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="grid h-16 w-16 place-items-center rounded-full bg-muted">
-          <Lock className="h-7 w-7 text-muted-foreground" />
+      <AppShell>
+        <div className="flex h-[70vh] flex-col items-center justify-center gap-4 p-8 text-center">
+          <div className="grid h-16 w-16 place-items-center rounded-full bg-muted">
+            <Lock className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold">Access Restricted</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Finance information is only visible to school administrators.
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-semibold">Access Restricted</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Finance information is only visible to school administrators.
-          </p>
-        </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <AppShell>
+      <div className="mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Finance</h1>
@@ -129,6 +133,7 @@ function FinancePage() {
           onOpenChange={(v) => !v && setReceiptId(null)}
           currency={currency}
         />
-    </div>
+      </div>
+    </AppShell>
   );
 }

@@ -15,11 +15,66 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Student = Tables<"students">;
+type Gender = "male" | "female" | "other";
+
+interface FormState {
+  first_name: string;
+  middle_name: string;
+  surname: string;
+  gender: Gender;
+  date_of_birth: string;
+  religion: string;
+  nationality: string;
+  state_of_origin: string;
+  lga: string;
+  home_address: string;
+  admission_number: string;
+  admission_date: string;
+  class_id: string;
+  arm_id: string;
+  house: string;
+  transport_route: string;
+  hostel: string;
+  previous_school: string;
+  blood_group: string;
+  genotype: string;
+  medical_conditions: string;
+  disabilities: string;
+}
+
+function toForm(s: Student): FormState {
+  return {
+    first_name: s.first_name ?? "",
+    middle_name: s.middle_name ?? "",
+    surname: s.surname ?? "",
+    gender: (s.gender as Gender) ?? "male",
+    date_of_birth: s.date_of_birth ?? "",
+    religion: s.religion ?? "",
+    nationality: s.nationality ?? "",
+    state_of_origin: s.state_of_origin ?? "",
+    lga: s.lga ?? "",
+    home_address: s.home_address ?? "",
+    admission_number: s.admission_number ?? "",
+    admission_date: s.admission_date ?? "",
+    class_id: s.class_id ?? "",
+    arm_id: s.arm_id ?? "",
+    house: s.house ?? "",
+    transport_route: s.transport_route ?? "",
+    hostel: s.hostel ?? "",
+    previous_school: s.previous_school ?? "",
+    blood_group: s.blood_group ?? "",
+    genotype: s.genotype ?? "",
+    medical_conditions: s.medical_conditions ?? "",
+    disabilities: s.disabilities ?? "",
+  };
+}
 
 function F({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
+      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </Label>
       {children}
     </div>
   );
@@ -40,71 +95,19 @@ export function StudentEditDialog({
   const { data: classes = [] } = useClasses(schoolId);
   const { data: arms = [] } = useArms(schoolId);
 
-  const filteredArms = React.useMemo(
-    () => arms.filter((a) => !form.class_id || a.class_id === form.class_id),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [arms, student.class_id],
-  );
+  // form state must be declared before any memo that reads it
+  const [form, setForm] = React.useState<FormState>(() => toForm(student));
 
-  const [form, setForm] = React.useState(() => ({
-    first_name: student.first_name ?? "",
-    middle_name: student.middle_name ?? "",
-    surname: student.surname ?? "",
-    gender: student.gender ?? "male",
-    date_of_birth: student.date_of_birth ?? "",
-    religion: student.religion ?? "",
-    nationality: student.nationality ?? "",
-    state_of_origin: student.state_of_origin ?? "",
-    lga: student.lga ?? "",
-    home_address: student.home_address ?? "",
-    admission_number: student.admission_number ?? "",
-    admission_date: student.admission_date ?? "",
-    class_id: student.class_id ?? "",
-    arm_id: student.arm_id ?? "",
-    house: student.house ?? "",
-    transport_route: student.transport_route ?? "",
-    hostel: student.hostel ?? "",
-    previous_school: student.previous_school ?? "",
-    blood_group: student.blood_group ?? "",
-    genotype: student.genotype ?? "",
-    medical_conditions: student.medical_conditions ?? "",
-    disabilities: student.disabilities ?? "",
-  }));
-
-  // Sync form if student prop changes (e.g. after successful save)
+  // Reset form whenever the dialog opens
   React.useEffect(() => {
-    if (open) {
-      setForm({
-        first_name: student.first_name ?? "",
-        middle_name: student.middle_name ?? "",
-        surname: student.surname ?? "",
-        gender: student.gender ?? "male",
-        date_of_birth: student.date_of_birth ?? "",
-        religion: student.religion ?? "",
-        nationality: student.nationality ?? "",
-        state_of_origin: student.state_of_origin ?? "",
-        lga: student.lga ?? "",
-        home_address: student.home_address ?? "",
-        admission_number: student.admission_number ?? "",
-        admission_date: student.admission_date ?? "",
-        class_id: student.class_id ?? "",
-        arm_id: student.arm_id ?? "",
-        house: student.house ?? "",
-        transport_route: student.transport_route ?? "",
-        hostel: student.hostel ?? "",
-        previous_school: student.previous_school ?? "",
-        blood_group: student.blood_group ?? "",
-        genotype: student.genotype ?? "",
-        medical_conditions: student.medical_conditions ?? "",
-        disabilities: student.disabilities ?? "",
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (open) setForm(toForm(student));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // Filtered arms depend on form.class_id — declared AFTER form state
   const armsForClass = React.useMemo(
     () => arms.filter((a) => !form.class_id || a.class_id === form.class_id),
     [arms, form.class_id],
@@ -118,7 +121,7 @@ export function StudentEditDialog({
           first_name: form.first_name.trim(),
           middle_name: form.middle_name.trim() || null,
           surname: form.surname.trim(),
-          gender: form.gender as Student["gender"],
+          gender: form.gender,
           date_of_birth: form.date_of_birth || null,
           religion: form.religion || null,
           nationality: form.nationality || null,
@@ -146,9 +149,6 @@ export function StudentEditDialog({
     }
   }
 
-  // suppress unused variable lint warning
-  void filteredArms;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
@@ -175,7 +175,7 @@ export function StudentEditDialog({
               <Input value={form.surname} onChange={(e) => set("surname", e.target.value)} />
             </F>
             <F label="Gender">
-              <Select value={form.gender} onValueChange={(v) => set("gender", v)}>
+              <Select value={form.gender} onValueChange={(v) => set("gender", v as Gender)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="male">Male</SelectItem>
@@ -217,7 +217,10 @@ export function StudentEditDialog({
             <F label="Class">
               <Select
                 value={form.class_id || "_none"}
-                onValueChange={(v) => { set("class_id", v === "_none" ? "" : v); set("arm_id", ""); }}
+                onValueChange={(v) => {
+                  set("class_id", v === "_none" ? "" : v);
+                  set("arm_id", "");
+                }}
               >
                 <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                 <SelectContent>
@@ -255,20 +258,26 @@ export function StudentEditDialog({
           {/* ── Medical ── */}
           <TabsContent value="medical" className="mt-4 grid gap-3 sm:grid-cols-2">
             <F label="Blood group">
-              <Select value={form.blood_group || "_none"} onValueChange={(v) => set("blood_group", v === "_none" ? "" : v)}>
+              <Select
+                value={form.blood_group || "_none"}
+                onValueChange={(v) => set("blood_group", v === "_none" ? "" : v)}
+              >
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
-                  {["_none","A+","A-","B+","B-","AB+","AB-","O+","O-"].map((g) => (
+                  {["_none", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((g) => (
                     <SelectItem key={g} value={g}>{g === "_none" ? "—" : g}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </F>
             <F label="Genotype">
-              <Select value={form.genotype || "_none"} onValueChange={(v) => set("genotype", v === "_none" ? "" : v)}>
+              <Select
+                value={form.genotype || "_none"}
+                onValueChange={(v) => set("genotype", v === "_none" ? "" : v)}
+              >
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
-                  {["_none","AA","AS","SS","AC","SC"].map((g) => (
+                  {["_none", "AA", "AS", "SS", "AC", "SC"].map((g) => (
                     <SelectItem key={g} value={g}>{g === "_none" ? "—" : g}</SelectItem>
                   ))}
                 </SelectContent>
@@ -276,12 +285,22 @@ export function StudentEditDialog({
             </F>
             <div className="sm:col-span-2">
               <F label="Medical conditions">
-                <Textarea rows={2} value={form.medical_conditions} onChange={(e) => set("medical_conditions", e.target.value)} placeholder="List any known conditions…" />
+                <Textarea
+                  rows={2}
+                  value={form.medical_conditions}
+                  onChange={(e) => set("medical_conditions", e.target.value)}
+                  placeholder="List any known conditions…"
+                />
               </F>
             </div>
             <div className="sm:col-span-2">
               <F label="Disabilities / special needs">
-                <Textarea rows={2} value={form.disabilities} onChange={(e) => set("disabilities", e.target.value)} placeholder="None if left blank" />
+                <Textarea
+                  rows={2}
+                  value={form.disabilities}
+                  onChange={(e) => set("disabilities", e.target.value)}
+                  placeholder="None if left blank"
+                />
               </F>
             </div>
           </TabsContent>
@@ -289,7 +308,10 @@ export function StudentEditDialog({
 
         <DialogFooter className="mt-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save} disabled={!form.first_name.trim() || !form.surname.trim() || update.isPending}>
+          <Button
+            onClick={save}
+            disabled={!form.first_name.trim() || !form.surname.trim() || update.isPending}
+          >
             {update.isPending ? "Saving…" : "Save changes"}
           </Button>
         </DialogFooter>
