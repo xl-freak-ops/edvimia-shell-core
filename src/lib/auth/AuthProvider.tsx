@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // for accounts that pre-date the auth trigger or lost their workspace.
     if (!profile || !profile.school_id || roleList.length === 0) {
       const { error: rpcErr } = await supabase.rpc("ensure_my_workspace", {
-        _school_name: profile?.full_name ? `${profile.full_name}'s School` : "My School",
+        _school_name: "My School",
       });
       if (!rpcErr) {
         const [{ data: p2 }, { data: r2 }] = await Promise.all([

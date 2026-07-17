@@ -19,10 +19,13 @@ export function ProfileForm({ school }: { school: Tables<"schools"> }) {
   const [form, setForm] = useState(school);
   const [dirty, setDirty] = useState(false);
 
+  // Only reset the form when the school identity changes (initial load or different school),
+  // NOT on every background refetch after an autosave — that would overwrite mid-typing.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setForm(school);
     setDirty(false);
-  }, [school]);
+  }, [school.id]);
 
   // Autosave (debounced) when dirty
   useEffect(() => {
