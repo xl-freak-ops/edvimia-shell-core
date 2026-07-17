@@ -189,7 +189,11 @@ export function useInviteStaff() {
           full_name,
           school_id,
           position,
-          redirect_to: `${window.location.origin}/auth/callback`,
+          // Always redirect to the published production app, not the dev domain.
+          // The dev domain is only accessible while the workspace is open, so
+          // invite links sent to external users would land on the Replit
+          // "Run this app" splash page if we used window.location.origin here.
+          redirect_to: `${(import.meta.env.VITE_APP_URL as string | undefined) ?? "https://edvimia-shell-core--nwatuchinonyere.replit.app"}/auth/callback`,
         }),
       });
 
