@@ -101,18 +101,24 @@ export function useCreateStudent(schoolId: string) {
       student: TablesInsert<"students">;
       guardians: Omit<TablesInsert<"student_guardians">, "student_id" | "school_id">[];
     }) => {
+      // Step 1: create the student — if this fails, throw so the caller knows.
       const { data, error } = await supabase
         .from("students")
         .insert(payload.student)
         .select()
         .single();
       if (error) throw error;
+
+      // Step 2: insert guardians — treated as non-fatal so a guardian RLS/DB
+      // error doesn't mask a successful student creation with a misleading message.
+      let guardianError: string | null = null;
       if (payload.guardians.length) {
         const rows = payload.guardians.map((g) => ({ ...g, student_id: data.id, school_id: schoolId }));
         const { error: gErr } = await supabase.from("student_guardians").insert(rows);
-        if (gErr) throw gErr;
+        if (gErr) guardianError = gErr.message;
       }
-      return data;
+
+      return { student: data, guardianError };
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: studentKeys.list(schoolId) }),
   });

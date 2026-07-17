@@ -189,8 +189,12 @@ export function StudentWizard() {
       if (state.emergency_contact)
         guardians.push({ relationship: "Emergency Contact", full_name: state.emergency_contact, is_emergency: true });
 
-      const created = await create.mutateAsync({ student, guardians });
-      toast.success("Student admitted successfully");
+      const { student: created, guardianError } = await create.mutateAsync({ student, guardians });
+      if (guardianError) {
+        toast.warning("Student admitted, but guardian info could not be saved — add it from the student profile.", { duration: 6000 });
+      } else {
+        toast.success("Student admitted successfully");
+      }
       navigate({ to: "/students/$id", params: { id: created.id } });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to create student");
