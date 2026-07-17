@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useChangeStudentStatus, useDeleteStudent } from "@/lib/students/hooks";
 import { useClasses } from "@/lib/school/hooks";
+import { StudentEditDialog } from "./StudentEditDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Student = Tables<"students">;
@@ -36,6 +37,7 @@ export function StudentActionsMenu({ student }: { student: Student }) {
   const [kind, setKind] = useState<Kind>(null);
   const [note, setNote] = useState("");
   const [targetClass, setTargetClass] = useState<string>("");
+  const [editOpen, setEditOpen] = useState(false);
 
   const isSuper = roles.includes("super_admin");
   const allowed = canManage(roles);
@@ -111,11 +113,11 @@ export function StudentActionsMenu({ student }: { student: Student }) {
             <Archive className="mr-2 h-4 w-4" /> Archive
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled onClick={() => toast.info("Inline edit coming soon")}>
+          <DropdownMenuItem disabled={!allowed} onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" /> Edit profile
           </DropdownMenuItem>
           <DropdownMenuItem
-            disabled={!isSuper}
+            disabled={!allowed}
             onClick={() => setKind("delete")}
             className="text-destructive focus:text-destructive"
           >
@@ -123,6 +125,8 @@ export function StudentActionsMenu({ student }: { student: Student }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <StudentEditDialog student={student} open={editOpen} onOpenChange={setEditOpen} />
 
       <Dialog open={kind !== null} onOpenChange={(o) => !o && close()}>
         <DialogContent>
