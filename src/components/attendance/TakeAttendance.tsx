@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useSessions, useTerms, useClasses, useArms, useSubjects } from "@/lib/school/hooks";
 import { useStudents } from "@/lib/students/hooks";
+import { useMyStaff, useStaffAssignments } from "@/lib/staff/hooks";
 import {
   useAttendanceForClass, useUpsertAttendance,
   STATUS_META, STATUS_ORDER,
@@ -19,9 +20,17 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 type Student = Tables<"students">;
 
+const ADMIN_ROLES = new Set(["school_admin", "super_admin", "principal", "vice_principal"]);
+
 export function TakeAttendance() {
-  const { school, userId } = useAuth();
+  const { school, userId, roles } = useAuth();
   const schoolId = school?.id ?? null;
+
+  // Form teachers see only their assigned classes; admins/principals see all.
+  const isFormTeacher = roles.includes("form_teacher") && !roles.some((r) => ADMIN_ROLES.has(r));
+  const myStaff = useMyStaff(schoolId, isFormTeacher ? userId : null);
+  const myAssignments = useStaffAssignments(isFormTeacher ? (myStaff.data?.id ?? undefined) : undefined);
+
   const sessions = useSessions(schoolId);
   const terms = useTerms(schoolId);
   const classes = useClasses(schoolId);
@@ -43,6 +52,37 @@ export function TakeAttendance() {
 
   React.useEffect(() => { if (!sessionId && currentSession) setSessionId(currentSession.id); }, [currentSession, sessionId]);
   React.useEffect(() => { if (!termId && currentTerm) setTermId(currentTerm.id); }, [currentTerm, termId]);
+
+  // Build the set of class IDs (and arm IDs) this form teacher is assigned to.
+  const assignedClassIds = React.useMemo(() => {
+    if (!isFormTeacher || !myAssignments.data) return null; // null = no restriction
+    const ids = new Set<string>();
+    for (const a of myAssignments.data) {
+      if (a.class_id) ids.add(a.class_id);
+    }
+    return ids;
+  }, [isFormTeacher, myAssignments.data]);
+
+  const assignedArmIds = React.useMemo(() => {
+    if (!isFormTeacher || !myAssignments.data) return null;
+    const ids = new Set<string>();
+    for (const a of myAssignments.data) {
+      if (a.class_arm_id) ids.add(a.class_arm_id);
+    }
+    return ids;
+  }, [isFormTeacher, myAssignments.data]);
+
+  // For form teachers, restrict the class list and auto-select when there's only one.
+  const visibleClasses = React.useMemo(() => {
+    const all = classes.data ?? [];
+    if (!assignedClassIds) return all;
+    return all.filter((c) => assignedClassIds.has(c.id));
+  }, [classes.data, assignedClassIds]);
+
+  React.useEffect(() => {
+    if (!isFormTeacher || classId || visibleClasses.length !== 1) return;
+    setClassId(visibleClasses[0].id);
+  }, [isFormTeacher, classId, visibleClasses]);
 
   const roster: Student[] = React.useMemo(() => {
     const list = students.data ?? [];
@@ -163,18 +203,22 @@ export function TakeAttendance() {
             </SelectContent>
           </Select>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          <Select value={classId} onValueChange={(v) => { setClassId(v); setArmId(""); }}>
+          <Select
+            value={classId}
+            onValueChange={(v) => { setClassId(v); setArmId(""); }}
+            disabled={isFormTeacher && visibleClasses.length === 1}
+          >
             <SelectTrigger><SelectValue placeholder="Class" /></SelectTrigger>
             <SelectContent>
-              {(classes.data ?? []).map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+              {visibleClasses.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
             </SelectContent>
           </Select>
           <Select value={armId} onValueChange={setArmId}>
             <SelectTrigger><SelectValue placeholder="Arm (optional)" /></SelectTrigger>
             <SelectContent>
-              {(arms.data ?? []).filter((a) => !classId || a.class_id === classId).map((a) => (
-                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-              ))}
+              {(arms.data ?? [])
+                .filter((a) => (!classId || a.class_id === classId) && (!assignedArmIds || assignedArmIds.has(a.id)))
+                .map((a) => (<SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>))}
             </SelectContent>
           </Select>
           <Select value={subjectId} onValueChange={setSubjectId}>

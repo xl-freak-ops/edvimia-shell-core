@@ -34,15 +34,27 @@ Deno.serve(async (req) => {
     const callerId = userData.user.id;
 
     const body = await req.json().catch(() => ({}));
-    const { email, full_name, school_id, redirect_to } = body as {
+    const { email, full_name, school_id, redirect_to, position } = body as {
       email?: string;
       full_name?: string;
       school_id?: string;
       redirect_to?: string;
+      position?: string;
     };
 
     if (!email)     return json({ error: "email is required" }, 400);
     if (!school_id) return json({ error: "school_id is required" }, 400);
+
+    // Map the staff position to the correct app_role enum value.
+    const POSITION_TO_ROLE: Record<string, string> = {
+      principal: "principal",
+      vice_principal: "vice_principal",
+      school_admin: "school_admin",
+      form_teacher: "form_teacher",
+      subject_teacher: "subject_teacher",
+      // account_officer, receptionist, librarian, bursar, other → subject_teacher
+    };
+    const staffRole = POSITION_TO_ROLE[position ?? ""] ?? "subject_teacher";
 
     // Confirm caller is a school_admin or super_admin.
     // Use limit(1) instead of maybeSingle() — the latter throws when a user
@@ -74,10 +86,7 @@ Deno.serve(async (req) => {
     const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(
       email,
       {
-        // "teacher" was removed from app_role; subject_teacher is the correct
-        // default for invited staff. The trigger casts this value, so it must
-        // be a valid enum member.
-        data: { full_name: full_name ?? null, school_id, initial_role: "subject_teacher" },
+        data: { full_name: full_name ?? null, school_id, initial_role: staffRole },
         ...(redirect_to ? { redirectTo: redirect_to } : {}),
       },
     );
@@ -94,12 +103,12 @@ Deno.serve(async (req) => {
       const existing = list?.users?.find((u: any) => u.email === email);
       if (!existing) return json({ error: inviteErr.message }, 500);
 
-      await provisionAccess(admin, existing.id, full_name ?? null, email, school_id);
+      await provisionAccess(admin, existing.id, full_name ?? null, email, school_id, staffRole);
       return json({ ok: true, invited: false });
     }
 
     const newUserId = inviteData.user.id;
-    await provisionAccess(admin, newUserId, full_name ?? null, email, school_id);
+    await provisionAccess(admin, newUserId, full_name ?? null, email, school_id, staffRole);
     return json({ ok: true, invited: true });
 
   } catch (e: any) {
@@ -107,27 +116,29 @@ Deno.serve(async (req) => {
   }
 });
 
-/** Set profile.school_id and ensure a 'teacher' role exists for this user. */
+/** Set profile.school_id and provision the correct scoped role for this user. */
 async function provisionAccess(
   admin: ReturnType<typeof createClient>,
   userId: string,
   full_name: string | null,
   email: string,
   school_id: string,
+  role: string,
 ) {
-  // Upsert profile — overrides the null school_id written by the auth trigger
+  // Upsert profile — sets school_id so the AuthProvider self-heal doesn't
+  // create a second school for the invited user on first login.
   await admin.from("profiles").upsert(
     { id: userId, full_name, email, school_id },
     { onConflict: "id" },
   );
 
-  // Insert subject_teacher role scoped to the school (ignore duplicates).
-  // school_id must be set so is_school_member() RLS checks pass for this user.
+  // Insert the scoped role — school_id must be set so is_school_member()
+  // RLS checks pass. Ignore duplicate errors (user already has this role).
   try {
     await admin.from("user_roles")
-      .insert({ user_id: userId, role: "subject_teacher", school_id });
+      .insert({ user_id: userId, role, school_id });
   } catch {
-    // duplicate row — fine
+    // duplicate — fine
   }
 }
 

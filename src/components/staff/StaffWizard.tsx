@@ -152,6 +152,7 @@ export function StaffWizard() {
             email: emailAddr,
             full_name: state.full_name.trim(),
             school_id: schoolId,
+            position: state.position,
           });
           if (result.invited) {
             toast.success("Staff member added", {

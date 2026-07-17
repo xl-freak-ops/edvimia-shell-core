@@ -4,3 +4,4 @@
 - [Zod default + useForm type mismatch](zod-useform-pitfall.md) — zod .default() on fields breaks zodResolver type compatibility; use required fields + defaultValues instead.
 - [Deployment setup](deployment-setup.md) — Nitro preset must be "node" for Replit; build outputs to .output/server/index.mjs; reads PORT env var.
 - [DB/types.ts drift](db-types-drift.md) — live DB functions can exist without a migration file; always cross-check pg_proc against supabase/migrations/ when adding new RPCs.
+- [invite-staff Edge Function pitfalls](invite-staff-pitfalls.md) — enum drift, maybeSingle multi-row bug, unscoped roles, raw fetch for error body, Site URL config.

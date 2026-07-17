@@ -54,31 +54,36 @@ type NavGroup = {
   items: NavItem[];
 };
 
-const staffNav = (dashboardUrl: string): NavGroup[] => [
-  {
-    label: "Workspace",
-    items: [
-      { title: "Dashboard", url: dashboardUrl, icon: LayoutDashboard, exact: true },
-      { title: "School", url: "/school", icon: Building2 },
-      { title: "Students", url: "/students", icon: GraduationCap },
-      { title: "Teachers", url: "/teachers", icon: Users },
-      { title: "Attendance", url: "/attendance", icon: CalendarCheck2 },
-      { title: "Results", url: "/results", icon: ClipboardList },
-      { title: "Timetable", url: "/timetable", icon: CalendarDays },
-      { title: "Finance", url: "/finance", icon: Wallet },
-      { title: "Communication", url: "/communication", icon: MessageSquare },
-      { title: "Reports", url: "/reports", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "Intelligence",
-    items: [
-      { title: "Analytics", url: "/analytics", icon: LineChart },
-      { title: "School Health", url: "/school-health", icon: HeartPulse },
-      { title: "Edvi · AI Assistant", url: "/ai", icon: Sparkles, badge: "New" },
-    ],
-  },
-];
+const ADMIN_ROLES = new Set<AppRole>(["super_admin", "school_admin", "principal", "vice_principal"]);
+
+const staffNav = (dashboardUrl: string, role: AppRole | null): NavGroup[] => {
+  const isAdmin = role !== null && ADMIN_ROLES.has(role);
+  return [
+    {
+      label: "Workspace",
+      items: [
+        { title: "Dashboard", url: dashboardUrl, icon: LayoutDashboard, exact: true },
+        { title: "School", url: "/school", icon: Building2 },
+        { title: "Students", url: "/students", icon: GraduationCap },
+        { title: "Teachers", url: "/teachers", icon: Users },
+        { title: "Attendance", url: "/attendance", icon: CalendarCheck2 },
+        { title: "Results", url: "/results", icon: ClipboardList },
+        { title: "Timetable", url: "/timetable", icon: CalendarDays },
+        ...(isAdmin ? [{ title: "Finance", url: "/finance", icon: Wallet }] : []),
+        { title: "Communication", url: "/communication", icon: MessageSquare },
+        { title: "Reports", url: "/reports", icon: BarChart3 },
+      ],
+    },
+    {
+      label: "Intelligence",
+      items: [
+        { title: "Analytics", url: "/analytics", icon: LineChart },
+        { title: "School Health", url: "/school-health", icon: HeartPulse },
+        { title: "Edvi · AI Assistant", url: "/ai", icon: Sparkles, badge: "New" },
+      ],
+    },
+  ];
+};
 
 const parentNav = (dashboardUrl: string): NavGroup[] => [
   {
@@ -106,7 +111,7 @@ const studentNav = (dashboardUrl: string): NavGroup[] => [
 function getNavGroups(role: AppRole | null, dashboardUrl: string): NavGroup[] {
   if (role === "parent") return parentNav(dashboardUrl);
   if (role === "student") return studentNav(dashboardUrl);
-  return staffNav(dashboardUrl);
+  return staffNav(dashboardUrl, role);
 }
 
 // ── Component ──────────────────────────────────────────────

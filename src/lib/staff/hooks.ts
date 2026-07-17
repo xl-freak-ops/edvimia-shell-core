@@ -136,16 +136,35 @@ export function useCreateStaff(schoolId: string) {
  * auth.admin.inviteUserByEmail and pre-provisions the teacher's profile
  * (school_id) and role so they land on the right dashboard on first login.
  */
+export function useMyStaff(schoolId: string | null | undefined, userId: string | null | undefined) {
+  return useQuery({
+    enabled: !!schoolId && !!userId,
+    queryKey: ["staff", "mine", schoolId ?? "", userId ?? ""],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff")
+        .select("id, full_name, position")
+        .eq("school_id", schoolId!)
+        .eq("user_id", userId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function useInviteStaff() {
   return useMutation({
     mutationFn: async ({
       email,
       full_name,
       school_id,
+      position,
     }: {
       email: string;
       full_name: string;
       school_id: string;
+      position?: string;
     }) => {
       // Use a raw fetch so we can read the response body before deciding
       // whether to throw. The Supabase JS functions client swallows the body
@@ -169,6 +188,7 @@ export function useInviteStaff() {
           email,
           full_name,
           school_id,
+          position,
           redirect_to: `${window.location.origin}/auth/callback`,
         }),
       });
