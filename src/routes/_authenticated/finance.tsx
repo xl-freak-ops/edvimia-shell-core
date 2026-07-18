@@ -18,9 +18,19 @@ import { PaymentsList } from "@/components/finance/PaymentsList";
 import { ExpensesPanel } from "@/components/finance/ExpensesPanel";
 import { ReceiptDialog } from "@/components/finance/ReceiptDialog";
 
+function FinanceError({ error }: { error: Error }) {
+  return (
+    <div className="m-8 rounded-lg border border-destructive/40 bg-destructive/10 p-6">
+      <p className="font-semibold text-destructive">Finance page error (debug)</p>
+      <pre className="mt-2 whitespace-pre-wrap text-xs text-destructive/80">{error?.message}{"\n"}{error?.stack}</pre>
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/_authenticated/finance")({
   head: () => ({ meta: [{ title: "Finance · Edvimia" }] }),
   component: FinancePage,
+  errorComponent: FinanceError,
 });
 
 const FINANCE_ROLES = new Set(["school_admin", "super_admin", "principal", "vice_principal"]);
