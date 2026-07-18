@@ -21,14 +21,33 @@ export function AssessmentConfig({ schoolId }: { schoolId: string }) {
   const totalWeight = items.filter((i) => i.is_enabled).reduce((a, b) => a + Number(b.weight), 0);
 
   const [draft, setDraft] = React.useState<Record<string, Partial<Component>>>({});
-  const patch = (id: string, p: Partial<Component>) => setDraft((d) => ({ ...d, [id]: { ...d[id], ...p } }));
+  const patch = (id: string, p: Partial<Component>) =>
+    setDraft((d) => ({ ...d, [id]: { ...d[id], ...p } }));
+
+  const hasDraft = Object.keys(draft).length > 0;
 
   const save = async (row: Component) => {
     const p = draft[row.id] ?? {};
     try {
       await upsert.mutateAsync({ ...row, ...p });
       setDraft((d) => { const n = { ...d }; delete n[row.id]; return n; });
-      toast.success(`${row.name} saved`);
+      toast.success(`${(p.name ?? row.name) as string} saved`);
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  };
+
+  const saveAll = async () => {
+    const dirtyIds = Object.keys(draft);
+    if (!dirtyIds.length) return;
+    try {
+      await Promise.all(
+        dirtyIds.map((id) => {
+          const row = items.find((c) => c.id === id);
+          if (!row) return Promise.resolve();
+          return upsert.mutateAsync({ ...row, ...draft[id] });
+        })
+      );
+      setDraft({});
+      toast.success("All changes saved");
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   };
 
@@ -59,26 +78,35 @@ export function AssessmentConfig({ schoolId }: { schoolId: string }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {hasDraft && (
+            <Button size="sm" onClick={saveAll} disabled={upsert.isPending}>
+              <Save className="mr-1.5 h-3.5 w-3.5" />
+              Save changes
+            </Button>
+          )}
           {items.length === 0 && (
             <Button size="sm" variant="outline" onClick={() => seed.mutate()} disabled={seed.isPending}>
               <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Seed defaults
             </Button>
           )}
-          <Button size="sm" onClick={addNew}><Plus className="mr-1.5 h-3.5 w-3.5" /> Add</Button>
+          <Button size="sm" variant={hasDraft ? "outline" : "default"} onClick={addNew}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" /> Add
+          </Button>
         </div>
       </CardHeader>
+
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead className="min-w-[7rem] w-28">Code</TableHead>
+                <TableHead className="min-w-[11rem]">Name</TableHead>
                 <TableHead className="w-24">Weight %</TableHead>
                 <TableHead className="w-24">Max</TableHead>
-                <TableHead className="w-20">Exam</TableHead>
-                <TableHead className="w-24">Enabled</TableHead>
-                <TableHead className="w-32 text-right">Actions</TableHead>
+                <TableHead className="w-16">Exam</TableHead>
+                <TableHead className="w-20">Enabled</TableHead>
+                <TableHead className="w-28 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -91,21 +119,73 @@ export function AssessmentConfig({ schoolId }: { schoolId: string }) {
               ) : items.map((c) => {
                 const d = draft[c.id] ?? {};
                 const merged = { ...c, ...d };
+                const isDirty = !!draft[c.id];
                 return (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-mono text-xs">
-                      <Input className="h-8" value={merged.code as string} onChange={(e) => patch(c.id, { code: e.target.value })} />
+                  <TableRow key={c.id} className={isDirty ? "bg-amber-50/60 dark:bg-amber-950/20" : undefined}>
+                    <TableCell className="font-mono text-xs min-w-[7rem]">
+                      <Input
+                        className="h-8 min-w-0 w-full"
+                        value={merged.code as string}
+                        onChange={(e) => patch(c.id, { code: e.target.value })}
+                      />
                     </TableCell>
-                    <TableCell><Input className="h-8" value={merged.name as string} onChange={(e) => patch(c.id, { name: e.target.value })} /></TableCell>
-                    <TableCell><Input className="h-8" type="number" value={String(merged.weight)} onChange={(e) => patch(c.id, { weight: Number(e.target.value) })} /></TableCell>
-                    <TableCell><Input className="h-8" type="number" value={String(merged.max_score)} onChange={(e) => patch(c.id, { max_score: Number(e.target.value) })} /></TableCell>
-                    <TableCell><Switch checked={!!merged.is_exam} onCheckedChange={(v) => patch(c.id, { is_exam: v })} /></TableCell>
-                    <TableCell><Switch checked={!!merged.is_enabled} onCheckedChange={(v) => patch(c.id, { is_enabled: v })} /></TableCell>
+                    <TableCell className="min-w-[11rem]">
+                      <Input
+                        className="h-8 min-w-0 w-full"
+                        value={merged.name as string}
+                        onChange={(e) => patch(c.id, { name: e.target.value })}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        className="h-8 w-20"
+                        type="number"
+                        value={String(merged.weight)}
+                        onChange={(e) => patch(c.id, { weight: Number(e.target.value) })}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        className="h-8 w-20"
+                        type="number"
+                        value={String(merged.max_score)}
+                        onChange={(e) => patch(c.id, { max_score: Number(e.target.value) })}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch checked={!!merged.is_exam} onCheckedChange={(v) => patch(c.id, { is_exam: v })} />
+                    </TableCell>
+                    <TableCell>
+                      <Switch checked={!!merged.is_enabled} onCheckedChange={(v) => patch(c.id, { is_enabled: v })} />
+                    </TableCell>
                     <TableCell className="flex justify-end gap-1">
-                      <Button size="sm" variant="outline" onClick={() => save(c)} disabled={!draft[c.id]}>
-                        <Save className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => del.mutate(c.id)}>
+                      {isDirty ? (
+                        <Button
+                          size="sm"
+                          onClick={() => save(c)}
+                          disabled={upsert.isPending}
+                          title="Save this row"
+                        >
+                          <Save className="mr-1 h-3.5 w-3.5" /> Save
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled
+                          className="opacity-30"
+                          title="No changes"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => del.mutate(c.id)}
+                        title="Delete"
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </TableCell>
