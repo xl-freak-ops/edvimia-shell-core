@@ -26,7 +26,6 @@ export function TakeAttendance() {
   const { school, userId, roles } = useAuth();
   const schoolId = school?.id ?? null;
 
-  // Form teachers see only their assigned classes; admins/principals see all.
   const isFormTeacher = roles.includes("form_teacher") && !roles.some((r) => ADMIN_ROLES.has(r));
   const myStaff = useMyStaff(schoolId, isFormTeacher ? userId : null);
   const myAssignments = useStaffAssignments(isFormTeacher ? (myStaff.data?.id ?? undefined) : undefined);
@@ -53,26 +52,20 @@ export function TakeAttendance() {
   React.useEffect(() => { if (!sessionId && currentSession) setSessionId(currentSession.id); }, [currentSession, sessionId]);
   React.useEffect(() => { if (!termId && currentTerm) setTermId(currentTerm.id); }, [currentTerm, termId]);
 
-  // Build the set of class IDs (and arm IDs) this form teacher is assigned to.
   const assignedClassIds = React.useMemo(() => {
-    if (!isFormTeacher || !myAssignments.data) return null; // null = no restriction
+    if (!isFormTeacher || !myAssignments.data) return null;
     const ids = new Set<string>();
-    for (const a of myAssignments.data) {
-      if (a.class_id) ids.add(a.class_id);
-    }
+    for (const a of myAssignments.data) { if (a.class_id) ids.add(a.class_id); }
     return ids;
   }, [isFormTeacher, myAssignments.data]);
 
   const assignedArmIds = React.useMemo(() => {
     if (!isFormTeacher || !myAssignments.data) return null;
     const ids = new Set<string>();
-    for (const a of myAssignments.data) {
-      if (a.class_arm_id) ids.add(a.class_arm_id);
-    }
+    for (const a of myAssignments.data) { if (a.class_arm_id) ids.add(a.class_arm_id); }
     return ids;
   }, [isFormTeacher, myAssignments.data]);
 
-  // For form teachers, restrict the class list and auto-select when there's only one.
   const visibleClasses = React.useMemo(() => {
     const all = classes.data ?? [];
     if (!assignedClassIds) return all;
@@ -100,7 +93,6 @@ export function TakeAttendance() {
     subjectId: subjectId || null,
   });
 
-  // Draft: student_id -> status; seeded from existing
   const [draft, setDraft] = React.useState<Record<string, AttendanceStatus>>({});
   const [history, setHistory] = React.useState<Array<Record<string, AttendanceStatus>>>([]);
 
@@ -149,37 +141,65 @@ export function TakeAttendance() {
 
   const submit = async (finalize: boolean) => {
     if (!canSubmit || !schoolId) return;
-    const rows: TablesInsert<"attendance_records">[] = roster.map((s) => ({
-      school_id: schoolId,
-      session_id: sessionId || null,
-      term_id: termId || null,
-      date,
-      class_id: classId || null,
-      arm_id: armId || null,
-      subject_id: subjectId || null,
-      student_id: s.id,
-      status: draft[s.id] ?? "present",
-      marked_by: userId ?? null,
-      marked_at: new Date().toISOString(),
-      is_finalized: finalize,
-    }));
+
+    // Build an id-map from existing records so we can UPDATE by id instead of
+    // relying on the (student_id, date, subject_id) conflict — which breaks when
+    // subject_id is NULL (Postgres treats two NULLs as distinct, so the conflict
+    // is never found and rows accumulate or error).
+    const existingById = new Map((existing.data ?? []).map((r) => [r.student_id, r]));
+
+    const toUpdate: Array<{ id: string; status: AttendanceStatus; is_finalized: boolean }> = [];
+    const toInsert: TablesInsert<"attendance_records">[] = [];
+
+    roster.forEach((s) => {
+      const status = draft[s.id] ?? "present";
+      const existing = existingById.get(s.id);
+      if (existing) {
+        toUpdate.push({ id: existing.id, status, is_finalized: finalize });
+      } else {
+        toInsert.push({
+          school_id: schoolId,
+          session_id: sessionId || null,
+          term_id: termId || null,
+          date,
+          class_id: classId || null,
+          arm_id: armId || null,
+          subject_id: subjectId || null,
+          student_id: s.id,
+          status,
+          marked_by: userId ?? null,
+          marked_at: new Date().toISOString(),
+          is_finalized: finalize,
+        });
+      }
+    });
+
     try {
-      await upsert.mutateAsync(rows);
+      await upsert.mutateAsync({ toUpdate, toInsert });
       toast.success(finalize ? "Attendance submitted" : "Draft saved");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to save");
+      toast.error(e instanceof Error ? e.message : "Failed to save attendance");
     }
   };
 
-  // Autosave when dirty (debounced)
+  // Autosave when dirty (debounced 2.5s). Only fires when dirtyCount changes
+  // so a failed save doesn't spin — the effect won't re-run until the user
+  // makes another change.
   const autosaveRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => {
     if (!dirtyCount || !canSubmit) return;
     if (autosaveRef.current) clearTimeout(autosaveRef.current);
-    autosaveRef.current = setTimeout(() => { submit(false); }, 2500);
+    autosaveRef.current = setTimeout(() => { void submit(false); }, 2500);
     return () => { if (autosaveRef.current) clearTimeout(autosaveRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dirtyCount]);
+  }, [dirtyCount, canSubmit]);
+
+  // Status bar text
+  const statusText = upsert.isPending
+    ? "Saving…"
+    : dirtyCount > 0
+    ? `${dirtyCount} unsaved change${dirtyCount === 1 ? "" : "s"} — saving shortly`
+    : "All changes saved";
 
   return (
     <div className="space-y-4">
@@ -238,8 +258,12 @@ export function TakeAttendance() {
             </div>
             <div>
               <CardTitle className="text-base">{roster.length} student{roster.length === 1 ? "" : "s"}</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                {dirtyCount ? `${dirtyCount} pending change${dirtyCount === 1 ? "" : "s"} · autosaving…` : "All changes saved"}
+              <p className={cn(
+                "text-xs",
+                upsert.isPending || dirtyCount > 0 ? "text-amber-600" : "text-muted-foreground",
+              )}>
+                {upsert.isPending && <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />}
+                {statusText}
               </p>
             </div>
           </div>
@@ -263,6 +287,22 @@ export function TakeAttendance() {
             </Button>
           </div>
         </CardHeader>
+
+        {/* Status key legend */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5 border-b px-4 py-2.5">
+          {STATUS_ORDER.map((st) => {
+            const m = STATUS_META[st];
+            return (
+              <span key={st} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={cn("inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-white", m.color.split(" ")[0])}>
+                  {m.short}
+                </span>
+                {m.label}
+              </span>
+            );
+          })}
+        </div>
+
         <CardContent className="p-0">
           {!classId ? (
             <div className="p-8 text-center text-sm text-muted-foreground">Pick a class to load the roster.</div>
@@ -295,12 +335,14 @@ export function TakeAttendance() {
                             key={st}
                             onClick={() => setStatus(s.id, st)}
                             className={cn(
-                              "grid h-8 min-w-[2.25rem] place-items-center rounded-md border text-xs font-semibold transition",
-                              active ? `${meta.color} border-transparent shadow-sm` : "bg-background hover:bg-muted",
+                              "flex h-8 min-w-[2.5rem] items-center justify-center gap-1 rounded-md border px-2 text-xs font-semibold transition",
+                              active
+                                ? `${meta.color} border-transparent shadow-sm`
+                                : "bg-background hover:bg-muted text-muted-foreground",
                             )}
                             title={meta.label}
                           >
-                            {meta.short}
+                            <span>{meta.short}</span>
                           </button>
                         );
                       })}

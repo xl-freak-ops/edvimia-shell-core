@@ -77,17 +77,32 @@ export function useAttendanceForStudent(studentId: string | null | undefined) {
 export function useUpsertAttendance() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (rows: TablesInsert<"attendance_records">[]) => {
-      if (!rows.length) return [];
-      const { data, error } = await supabase
-        .from("attendance_records")
-        .upsert(rows, {
-          onConflict: "student_id,date,subject_id",
-          ignoreDuplicates: false,
-        })
-        .select();
-      if (error) throw error;
-      return data ?? [];
+    mutationFn: async (payload: {
+      toInsert: TablesInsert<"attendance_records">[];
+      toUpdate: Array<{ id: string; status: AttendanceStatus; is_finalized: boolean }>;
+    }) => {
+      const { toInsert, toUpdate } = payload;
+
+      // INSERT new records
+      if (toInsert.length) {
+        const { error } = await supabase.from("attendance_records").insert(toInsert);
+        if (error) throw new Error(error.message);
+      }
+
+      // UPDATE existing records by id — avoids the NULL subject_id conflict
+      // problem where Postgres treats two NULLs as distinct in unique constraints.
+      if (toUpdate.length) {
+        // Batch as individual updates (Supabase JS doesn't support bulk update by id)
+        await Promise.all(
+          toUpdate.map(({ id, status, is_finalized }) =>
+            supabase
+              .from("attendance_records")
+              .update({ status, is_finalized })
+              .eq("id", id)
+              .then(({ error }) => { if (error) throw new Error(error.message); }),
+          ),
+        );
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["attendance"] });
