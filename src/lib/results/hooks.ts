@@ -41,12 +41,25 @@ export function useUpsertComponent(schoolId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (row: TablesInsert<"assessment_components">) => {
+      // Existing rows must use UPDATE by id — upsert-by-code fails when the
+      // code itself has been changed (PK conflict on the existing id).
+      if (row.id) {
+        const { id, ...fields } = row;
+        const { data, error } = await supabase
+          .from("assessment_components")
+          .update(fields)
+          .eq("id", id)
+          .select()
+          .single();
+        if (error) throw new Error(error.message);
+        return data;
+      }
       const { data, error } = await supabase
         .from("assessment_components")
-        .upsert(row, { onConflict: "school_id,code" })
+        .insert(row)
         .select()
         .single();
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: resultKeys.components(schoolId) }),
