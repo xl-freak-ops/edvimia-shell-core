@@ -1,8 +1,11 @@
 // Edvimia · invite-staff edge function
-// Called by school admins to invite a teacher/staff member via email.
+// Handles three invite types via a single endpoint:
+//   1. Staff (teacher/admin)  — position param
+//   2. Parent portal          — portal_role: "parent", student_id, relationship
+//   3. Student portal         — portal_role: "student", student_id
 // Uses the service-role key to call auth.admin.inviteUserByEmail, then
-// pre-provisions their profile (school_id) and user_role so the AuthProvider
-// self-heal does not create a spurious second school for them.
+// pre-provisions the profile + user_role (and parent_student_links for
+// parent/student) so the AuthProvider self-heal works on first login.
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
@@ -34,44 +37,38 @@ Deno.serve(async (req) => {
     const callerId = userData.user.id;
 
     const body = await req.json().catch(() => ({}));
-    const { email, full_name, school_id, redirect_to, position } = body as {
+    const {
+      email, full_name, school_id, redirect_to,
+      // Staff-specific
+      position,
+      // Parent/student-specific
+      portal_role, student_id, relationship,
+    } = body as {
       email?: string;
       full_name?: string;
       school_id?: string;
       redirect_to?: string;
       position?: string;
+      portal_role?: "parent" | "student";
+      student_id?: string;
+      relationship?: string;
     };
 
     if (!email)     return json({ error: "email is required" }, 400);
     if (!school_id) return json({ error: "school_id is required" }, 400);
 
-    // Map the staff position to the correct app_role enum value.
-    const POSITION_TO_ROLE: Record<string, string> = {
-      principal: "principal",
-      vice_principal: "vice_principal",
-      school_admin: "school_admin",
-      form_teacher: "form_teacher",
-      subject_teacher: "subject_teacher",
-      // account_officer, receptionist, librarian, bursar, other → subject_teacher
-    };
-    const staffRole = POSITION_TO_ROLE[position ?? ""] ?? "subject_teacher";
-
-    // Confirm caller is a school_admin or super_admin.
-    // Use limit(1) instead of maybeSingle() — the latter throws when a user
-    // has both a null-school_id row and a scoped row, returning null data
-    // and incorrectly triggering the 403.
+    // Confirm caller is a school_admin or super_admin for this school.
     const { data: roleRows } = await admin
       .from("user_roles")
       .select("role")
       .eq("user_id", callerId)
-      .in("role", ["school_admin", "super_admin"])
+      .in("role", ["school_admin", "super_admin", "principal"])
       .limit(1);
 
     const roleRow = roleRows?.[0] ?? null;
     if (!roleRow) return json({ error: "Forbidden: not a school admin" }, 403);
 
-    // For school_admin, also confirm they belong to this specific school
-    if (roleRow.role === "school_admin") {
+    if (roleRow.role === "school_admin" || roleRow.role === "principal") {
       const { data: callerProfile } = await admin
         .from("profiles")
         .select("school_id")
@@ -82,41 +79,63 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Determine the role to assign
+    let assignedRole: string;
+    if (portal_role === "parent") {
+      if (!student_id) return json({ error: "student_id is required for parent invite" }, 400);
+      assignedRole = "parent";
+    } else if (portal_role === "student") {
+      if (!student_id) return json({ error: "student_id is required for student invite" }, 400);
+      assignedRole = "student";
+    } else {
+      // Staff invite path
+      const POSITION_TO_ROLE: Record<string, string> = {
+        principal: "principal",
+        vice_principal: "vice_principal",
+        school_admin: "school_admin",
+        form_teacher: "form_teacher",
+        subject_teacher: "subject_teacher",
+      };
+      assignedRole = POSITION_TO_ROLE[position ?? ""] ?? "subject_teacher";
+    }
+
     // Send the invite — Supabase creates the auth user in 'invited' state
     const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(
       email,
       {
-        data: { full_name: full_name ?? null, school_id, initial_role: staffRole },
+        data: { full_name: full_name ?? null, school_id, initial_role: assignedRole },
         ...(redirect_to ? { redirectTo: redirect_to } : {}),
       },
     );
 
+    let invitedUserId: string;
+
     if (inviteErr) {
-      // 422 "User already registered" — they have an account; just ensure access
       const alreadyExists = inviteErr.message.toLowerCase().includes("already") ||
         (inviteErr as any).status === 422;
-
       if (!alreadyExists) return json({ error: inviteErr.message }, 500);
 
-      // Find their existing auth user by email
+      // User already exists — find them and grant access
       const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
       const existing = list?.users?.find((u: any) => u.email === email);
       if (!existing) return json({ error: inviteErr.message }, 500);
-
-      await provisionAccess(admin, existing.id, full_name ?? null, email, school_id, staffRole);
-      return json({ ok: true, invited: false });
+      invitedUserId = existing.id;
+    } else {
+      invitedUserId = inviteData.user.id;
     }
 
-    const newUserId = inviteData.user.id;
-    await provisionAccess(admin, newUserId, full_name ?? null, email, school_id, staffRole);
-    return json({ ok: true, invited: true });
+    await provisionAccess(
+      admin, invitedUserId, full_name ?? null, email,
+      school_id, assignedRole, student_id, relationship,
+    );
+
+    return json({ ok: true, invited: !inviteErr });
 
   } catch (e: any) {
     return json({ error: e?.message ?? "Unexpected error" }, 500);
   }
 });
 
-/** Set profile.school_id and provision the correct scoped role for this user. */
 async function provisionAccess(
   admin: ReturnType<typeof createClient>,
   userId: string,
@@ -124,21 +143,39 @@ async function provisionAccess(
   email: string,
   school_id: string,
   role: string,
+  student_id?: string,
+  relationship?: string,
 ) {
-  // Upsert profile — sets school_id so the AuthProvider self-heal doesn't
-  // create a second school for the invited user on first login.
+  // Upsert profile
   await admin.from("profiles").upsert(
     { id: userId, full_name, email, school_id },
     { onConflict: "id" },
   );
 
-  // Insert the scoped role — school_id must be set so is_school_member()
-  // RLS checks pass. Ignore duplicate errors (user already has this role).
-  try {
-    await admin.from("user_roles")
-      .insert({ user_id: userId, role, school_id });
-  } catch {
-    // duplicate — fine
+  // Insert scoped role (ignore duplicate)
+  const { error: roleErr } = await admin.from("user_roles")
+    .insert({ user_id: userId, role, school_id });
+  if (roleErr && !roleErr.message.toLowerCase().includes("duplicate") &&
+      !roleErr.message.toLowerCase().includes("unique")) {
+    throw new Error(`Role assignment failed: ${roleErr.message}`);
+  }
+
+  // For parent/student, link them to the student record
+  if ((role === "parent" || role === "student") && student_id) {
+    const { error: linkErr } = await admin.from("parent_student_links").upsert(
+      {
+        school_id,
+        parent_user_id: userId,
+        student_id,
+        relationship: role === "student" ? "Self" : (relationship ?? "Guardian"),
+        is_primary: role === "parent",
+      },
+      { onConflict: "parent_user_id,student_id" },
+    );
+    if (linkErr && !linkErr.message.toLowerCase().includes("duplicate") &&
+        !linkErr.message.toLowerCase().includes("unique")) {
+      throw new Error(`Link failed: ${linkErr.message}`);
+    }
   }
 }
 

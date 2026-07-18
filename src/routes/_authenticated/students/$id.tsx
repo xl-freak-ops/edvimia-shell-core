@@ -9,6 +9,7 @@ import { useStudent, useStatusHistory } from "@/lib/students/hooks";
 import { StudentStatusBadge } from "@/components/students/StudentStatusBadge";
 import { StudentActionsMenu } from "@/components/students/StudentActionsMenu";
 import { GuardiansPanel } from "@/components/students/GuardiansPanel";
+import { PortalAccessCard } from "@/components/students/PortalAccessCard";
 import { DocumentsPanel } from "@/components/students/DocumentsPanel";
 import { StudentAIInsights } from "@/components/students/StudentAIInsights";
 import { EmptyState } from "@/components/school/EmptyState";
@@ -107,6 +108,9 @@ function StudentProfilePage() {
                 <GuardiansPanel studentId={student.id} />
               </CardContent>
             </Card>
+            {school?.id && (
+              <PortalAccessCard student={student} schoolId={school.id} />
+            )}
           </div>
           <Card className="shadow-soft">
             <CardHeader><CardTitle className="text-sm">Status history</CardTitle></CardHeader>

@@ -211,6 +211,42 @@ export async function uploadStudentAsset(
   return { path, signedUrl: data?.signedUrl ?? "" };
 }
 
+export function useInvitePortalUser() {
+  return useMutation({
+    mutationFn: async (params: {
+      email: string;
+      full_name: string;
+      school_id: string;
+      student_id: string;
+      portal_role: "parent" | "student";
+      relationship?: string;
+    }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/invite-staff`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: supabaseKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...params,
+          redirect_to: `${(import.meta.env.VITE_APP_URL as string | undefined) ?? "https://edvimia-shell-core--nwatuchinonyere.replit.app"}/auth/callback`,
+        }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? `Invite failed (${res.status})`);
+      return body as { ok: boolean; invited: boolean };
+    },
+  });
+}
+
 export function generateAdmissionNumber(schoolCode = "EDV"): string {
   const y = new Date().getFullYear();
   const rnd = Math.floor(1000 + Math.random() * 9000);
