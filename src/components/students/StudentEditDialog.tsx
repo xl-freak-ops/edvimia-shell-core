@@ -1,5 +1,6 @@
 import * as React from "react";
 import { toast } from "sonner";
+import { Upload, User } from "lucide-react";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -9,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUpdateStudent } from "@/lib/students/hooks";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUpdateStudent, uploadStudentAsset } from "@/lib/students/hooks";
 import { useClasses, useArms } from "@/lib/school/hooks";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import type { Tables } from "@/integrations/supabase/types";
@@ -97,10 +99,17 @@ export function StudentEditDialog({
 
   // form state must be declared before any memo that reads it
   const [form, setForm] = React.useState<FormState>(() => toForm(student));
+  const [photoFile, setPhotoFile] = React.useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = React.useState<string | null>(student.photo_url ?? null);
+  const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
 
-  // Reset form whenever the dialog opens
+  // Reset form and photo state whenever the dialog opens
   React.useEffect(() => {
-    if (open) setForm(toForm(student));
+    if (open) {
+      setForm(toForm(student));
+      setPhotoFile(null);
+      setPhotoPreview(student.photo_url ?? null);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -115,9 +124,20 @@ export function StudentEditDialog({
 
   async function save() {
     try {
+      let photo_url = student.photo_url ?? null;
+      if (photoFile) {
+        setUploadingPhoto(true);
+        try {
+          const { signedUrl } = await uploadStudentAsset(schoolId, student.id, "photo", photoFile);
+          photo_url = signedUrl;
+        } finally {
+          setUploadingPhoto(false);
+        }
+      }
       await update.mutateAsync({
         id: student.id,
         patch: {
+          photo_url,
           first_name: form.first_name.trim(),
           middle_name: form.middle_name.trim() || null,
           surname: form.surname.trim(),
@@ -164,7 +184,47 @@ export function StudentEditDialog({
           </TabsList>
 
           {/* ── Personal ── */}
-          <TabsContent value="personal" className="mt-4 grid gap-3 sm:grid-cols-2">
+          <TabsContent value="personal" className="mt-4 space-y-4">
+            {/* Photo upload */}
+            <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-4">
+              <Avatar className="h-20 w-20 shrink-0 ring-2 ring-border">
+                <AvatarImage src={photoPreview ?? undefined} alt="Profile photo" />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  <User className="h-8 w-8" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Profile photo
+                </p>
+                <label
+                  htmlFor="edit-student-photo"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent"
+                >
+                  <Upload className="h-4 w-4" />
+                  {photoFile ? "Change photo" : photoPreview ? "Replace photo" : "Upload photo"}
+                </label>
+                <input
+                  id="edit-student-photo"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setPhotoFile(file);
+                    setPhotoPreview(URL.createObjectURL(file));
+                  }}
+                />
+                {photoFile && (
+                  <p className="text-[11px] text-muted-foreground">
+                    {photoFile.name} — will upload on save
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
             <F label="First name">
               <Input value={form.first_name} onChange={(e) => set("first_name", e.target.value)} />
             </F>
@@ -204,6 +264,7 @@ export function StudentEditDialog({
                 <Textarea rows={2} value={form.home_address} onChange={(e) => set("home_address", e.target.value)} />
               </F>
             </div>
+            </div>{/* end grid */}
           </TabsContent>
 
           {/* ── Academic ── */}
@@ -310,9 +371,9 @@ export function StudentEditDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
             onClick={save}
-            disabled={!form.first_name.trim() || !form.surname.trim() || update.isPending}
+            disabled={!form.first_name.trim() || !form.surname.trim() || update.isPending || uploadingPhoto}
           >
-            {update.isPending ? "Saving…" : "Save changes"}
+            {uploadingPhoto ? "Uploading photo…" : update.isPending ? "Saving…" : "Save changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
