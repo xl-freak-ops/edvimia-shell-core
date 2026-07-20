@@ -236,7 +236,7 @@ export function useInvitePortalUser() {
         },
         body: JSON.stringify({
           ...params,
-          redirect_to: `${(import.meta.env.VITE_APP_URL as string | undefined) ?? "https://edvimia-shell-core--nwatuchinonyere.replit.app"}/auth/callback`,
+          redirect_to: `${(import.meta.env.VITE_APP_URL as string | undefined) ?? window.location.origin}/auth/callback`,
         }),
       });
 

@@ -189,11 +189,11 @@ export function useInviteStaff() {
           full_name,
           school_id,
           position,
-          // Always redirect to the published production app, not the dev domain.
-          // The dev domain is only accessible while the workspace is open, so
-          // invite links sent to external users would land on the Replit
-          // "Run this app" splash page if we used window.location.origin here.
-          redirect_to: `${(import.meta.env.VITE_APP_URL as string | undefined) ?? "https://edvimia-shell-core--nwatuchinonyere.replit.app"}/auth/callback`,
+          // Use VITE_APP_URL (set to the production domain) when available so
+          // invite links always point to the live app regardless of which browser
+          // the admin is using. Falls back to window.location.origin so it also
+          // works correctly on the deployed domain without manual config.
+          redirect_to: `${(import.meta.env.VITE_APP_URL as string | undefined) ?? window.location.origin}/auth/callback`,
         }),
       });
 
