@@ -184,9 +184,30 @@ export function useChangeStudentStatus(schoolId: string) {
 export function useDeleteStudent(schoolId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("students").delete().eq("id", id);
-      if (error) throw error;
+    mutationFn: async (studentId: string) => {
+      // Use the delete-student Edge Function so auth.users, user_roles,
+      // parent_student_links, student_guardians, and student_documents are
+      // all fully cleaned up server-side with the service-role key.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/delete-student`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: supabaseKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ student_id: studentId, school_id: schoolId }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? `Delete failed (${res.status})`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: studentKeys.list(schoolId) }),
   });
