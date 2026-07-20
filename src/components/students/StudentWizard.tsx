@@ -56,15 +56,19 @@ type State = {
   hostel: string;
   // guardians
   father_name: string;
+  father_phone: string;
+  father_email: string;
   mother_name: string;
+  mother_phone: string;
+  mother_email: string;
   guardian_name: string;
   relationship: string;
   occupation: string;
-  email: string;
-  phone: string;
-  whatsapp: string;
+  guardian_phone: string;
+  guardian_email: string;
   guardian_address: string;
-  emergency_contact: string;
+  emergency_name: string;
+  emergency_phone: string;
 };
 
 const STEPS = [
@@ -100,15 +104,19 @@ function empty(): State {
     transport_route: "",
     hostel: "",
     father_name: "",
+    father_phone: "",
+    father_email: "",
     mother_name: "",
+    mother_phone: "",
+    mother_email: "",
     guardian_name: "",
-    relationship: "Parent",
+    relationship: "Guardian",
     occupation: "",
-    email: "",
-    phone: "",
-    whatsapp: "",
+    guardian_phone: "",
+    guardian_email: "",
     guardian_address: "",
-    emergency_contact: "",
+    emergency_name: "",
+    emergency_phone: "",
   };
 }
 
@@ -134,7 +142,7 @@ export function StudentWizard() {
   const canNext = useMemo(() => {
     if (step === 0) return state.first_name && state.surname && state.gender;
     if (step === 1) return state.admission_number && state.student_code && state.admission_date;
-    if (step === 2) return state.father_name || state.mother_name || state.guardian_name;
+    if (step === 2) return state.father_name || state.mother_name || state.guardian_name || state.emergency_name;
     return true;
   }, [step, state]);
 
@@ -180,14 +188,42 @@ export function StudentWizard() {
         hostel: state.hostel || null,
       };
       const guardians: Omit<TablesInsert<"student_guardians">, "student_id" | "school_id">[] = [];
-      if (state.father_name)
-        guardians.push({ relationship: "Father", full_name: state.father_name, phone: state.phone || null, email: state.email || null, is_primary: true });
-      if (state.mother_name)
-        guardians.push({ relationship: "Mother", full_name: state.mother_name, whatsapp: state.whatsapp || null });
+      // Mark first entered guardian as primary
+      const hasFather = !!state.father_name;
+      const hasMother = !!state.mother_name;
+      if (hasFather)
+        guardians.push({
+          relationship: "Father",
+          full_name: state.father_name,
+          phone: state.father_phone || null,
+          email: state.father_email || null,
+          is_primary: true,
+        });
+      if (hasMother)
+        guardians.push({
+          relationship: "Mother",
+          full_name: state.mother_name,
+          phone: state.mother_phone || null,
+          email: state.mother_email || null,
+          is_primary: !hasFather,
+        });
       if (state.guardian_name)
-        guardians.push({ relationship: state.relationship, full_name: state.guardian_name, occupation: state.occupation || null, address: state.guardian_address || null });
-      if (state.emergency_contact)
-        guardians.push({ relationship: "Emergency Contact", full_name: state.emergency_contact, is_emergency: true });
+        guardians.push({
+          relationship: state.relationship,
+          full_name: state.guardian_name,
+          phone: state.guardian_phone || null,
+          email: state.guardian_email || null,
+          occupation: state.occupation || null,
+          address: state.guardian_address || null,
+          is_primary: !hasFather && !hasMother,
+        });
+      if (state.emergency_name)
+        guardians.push({
+          relationship: "Emergency Contact",
+          full_name: state.emergency_name,
+          phone: state.emergency_phone || null,
+          is_emergency: true,
+        });
 
       const { student: created, guardianError } = await create.mutateAsync({ student, guardians });
       if (guardianError) {
@@ -321,20 +357,55 @@ export function StudentWizard() {
           )}
 
           {step === 2 && (
-            <div className="grid gap-5 md:grid-cols-2">
-              <Field label="Father's name" v={state.father_name} onChange={(v) => set("father_name", v)} />
-              <Field label="Mother's name" v={state.mother_name} onChange={(v) => set("mother_name", v)} />
-              <Field label="Guardian name" v={state.guardian_name} onChange={(v) => set("guardian_name", v)} />
-              <Field label="Relationship" v={state.relationship} onChange={(v) => set("relationship", v)} />
-              <Field label="Occupation" v={state.occupation} onChange={(v) => set("occupation", v)} />
-              <Field type="email" label="Email" v={state.email} onChange={(v) => set("email", v)} />
-              <Field label="Phone" v={state.phone} onChange={(v) => set("phone", v)} />
-              <Field label="WhatsApp number" v={state.whatsapp} onChange={(v) => set("whatsapp", v)} />
-              <div className="md:col-span-2">
-                <Label className="mb-2 block">Home address</Label>
-                <Textarea value={state.guardian_address} onChange={(e) => set("guardian_address", e.target.value)} rows={2} />
-              </div>
-              <Field label="Emergency contact" v={state.emergency_contact} onChange={(v) => set("emergency_contact", v)} />
+            <div className="space-y-6">
+              <p className="text-xs text-muted-foreground -mt-1">
+                Fill in at least one guardian. You can add more from the student's profile after saving.
+              </p>
+
+              {/* Father */}
+              <section className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Father</h3>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Field label="Full name" v={state.father_name} onChange={(v) => set("father_name", v)} placeholder="e.g. Chukwuemeka Obi" />
+                  <Field label="Phone" v={state.father_phone} onChange={(v) => set("father_phone", v)} placeholder="+234 800 000 0000" />
+                  <Field type="email" label="Email" v={state.father_email} onChange={(v) => set("father_email", v)} placeholder="father@example.com" />
+                </div>
+              </section>
+
+              {/* Mother */}
+              <section className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mother</h3>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Field label="Full name" v={state.mother_name} onChange={(v) => set("mother_name", v)} placeholder="e.g. Ngozi Obi" />
+                  <Field label="Phone" v={state.mother_phone} onChange={(v) => set("mother_phone", v)} placeholder="+234 800 000 0000" />
+                  <Field type="email" label="Email" v={state.mother_email} onChange={(v) => set("mother_email", v)} placeholder="mother@example.com" />
+                </div>
+              </section>
+
+              {/* Other guardian */}
+              <section className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Other guardian (optional)</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Full name" v={state.guardian_name} onChange={(v) => set("guardian_name", v)} placeholder="Name" />
+                  <Field label="Relationship" v={state.relationship} onChange={(v) => set("relationship", v)} placeholder="e.g. Uncle, Aunt…" />
+                  <Field label="Phone" v={state.guardian_phone} onChange={(v) => set("guardian_phone", v)} />
+                  <Field type="email" label="Email" v={state.guardian_email} onChange={(v) => set("guardian_email", v)} />
+                  <Field label="Occupation" v={state.occupation} onChange={(v) => set("occupation", v)} />
+                  <div className="md:col-span-2">
+                    <Label className="mb-2 block">Address</Label>
+                    <Textarea value={state.guardian_address} onChange={(e) => set("guardian_address", e.target.value)} rows={2} />
+                  </div>
+                </div>
+              </section>
+
+              {/* Emergency contact */}
+              <section className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Emergency contact (optional)</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Full name" v={state.emergency_name} onChange={(v) => set("emergency_name", v)} placeholder="Name" />
+                  <Field label="Phone" v={state.emergency_phone} onChange={(v) => set("emergency_phone", v)} placeholder="+234 800 000 0000" />
+                </div>
+              </section>
             </div>
           )}
 
@@ -392,8 +463,8 @@ function ReviewGrid({ state, classes, arms }: { state: State; classes: { id: str
     ["Nationality", state.nationality || "—"],
     ["State / LGA", [state.state_of_origin, state.lga].filter(Boolean).join(" / ") || "—"],
     ["Guardian", state.father_name || state.mother_name || state.guardian_name || "—"],
-    ["Phone", state.phone || "—"],
-    ["Emergency", state.emergency_contact || "—"],
+    ["Phone", state.father_phone || state.mother_phone || state.guardian_phone || "—"],
+    ["Emergency", state.emergency_name || "—"],
   ];
   return (
     <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">

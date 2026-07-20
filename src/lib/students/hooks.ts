@@ -268,6 +268,65 @@ export function useInvitePortalUser() {
   });
 }
 
+export function useAddGuardian(schoolId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: Omit<TablesInsert<"student_guardians">, "school_id">) => {
+      const { data, error } = await supabase
+        .from("student_guardians")
+        .insert({ ...payload, school_id: schoolId })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: studentKeys.guardians(v.student_id) });
+    },
+  });
+}
+
+export function useUpdateGuardian() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      student_id,
+      patch,
+    }: {
+      id: string;
+      student_id: string;
+      patch: TablesUpdate<"student_guardians">;
+    }) => {
+      const { data, error } = await supabase
+        .from("student_guardians")
+        .update(patch)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return { data, student_id };
+    },
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: studentKeys.guardians(v.student_id) });
+    },
+  });
+}
+
+export function useDeleteGuardian() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, student_id }: { id: string; student_id: string }) => {
+      const { error } = await supabase.from("student_guardians").delete().eq("id", id);
+      if (error) throw error;
+      return student_id;
+    },
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: studentKeys.guardians(v.student_id) });
+    },
+  });
+}
+
 export function generateAdmissionNumber(schoolCode = "EDV"): string {
   const y = new Date().getFullYear();
   const rnd = Math.floor(1000 + Math.random() * 9000);

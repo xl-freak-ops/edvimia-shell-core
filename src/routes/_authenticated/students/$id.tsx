@@ -105,7 +105,9 @@ function StudentProfilePage() {
             <Card className="shadow-soft">
               <CardHeader><CardTitle className="text-sm">Guardians</CardTitle></CardHeader>
               <CardContent>
-                <GuardiansPanel studentId={student.id} />
+                {school?.id && (
+                  <GuardiansPanel studentId={student.id} schoolId={school.id} />
+                )}
               </CardContent>
             </Card>
             {school?.id && (
