@@ -45,7 +45,7 @@ export function PortalAccessCard({
     }
   };
 
-  const studentEmail = (student as unknown as { email?: string | null }).email;
+  const studentEmail = student.email;
   const studentName = `${student.first_name} ${student.surname}`;
   const guardianWithEmail = guardians.filter((g) => !!g.email);
 

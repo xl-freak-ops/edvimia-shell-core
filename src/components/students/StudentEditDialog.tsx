@@ -38,6 +38,7 @@ interface FormState {
   transport_route: string;
   hostel: string;
   previous_school: string;
+  email: string;
   blood_group: string;
   genotype: string;
   medical_conditions: string;
@@ -56,6 +57,7 @@ function toForm(s: Student): FormState {
     state_of_origin: s.state_of_origin ?? "",
     lga: s.lga ?? "",
     home_address: s.home_address ?? "",
+    email: s.email ?? "",
     admission_number: s.admission_number ?? "",
     admission_date: s.admission_date ?? "",
     class_id: s.class_id ?? "",
@@ -148,6 +150,7 @@ export function StudentEditDialog({
           state_of_origin: form.state_of_origin || null,
           lga: form.lga || null,
           home_address: form.home_address || null,
+          email: form.email.trim() || null,
           admission_number: form.admission_number.trim(),
           admission_date: form.admission_date,
           class_id: form.class_id || null,
@@ -258,6 +261,9 @@ export function StudentEditDialog({
             </F>
             <F label="LGA">
               <Input value={form.lga} onChange={(e) => set("lga", e.target.value)} />
+            </F>
+            <F label="Email address">
+              <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="student@example.com" />
             </F>
             <div className="sm:col-span-2">
               <F label="Home address">

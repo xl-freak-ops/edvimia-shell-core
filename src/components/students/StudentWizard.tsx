@@ -54,6 +54,7 @@ type State = {
   house: string;
   transport_route: string;
   hostel: string;
+  student_email: string;
   // guardians
   father_name: string;
   father_phone: string;
@@ -103,6 +104,7 @@ function empty(): State {
     house: "",
     transport_route: "",
     hostel: "",
+    student_email: "",
     father_name: "",
     father_phone: "",
     father_email: "",
@@ -168,6 +170,7 @@ export function StudentWizard() {
         first_name: state.first_name,
         middle_name: state.middle_name || null,
         surname: state.surname,
+        email: state.student_email || null,
         gender: state.gender,
         date_of_birth: state.date_of_birth || null,
         religion: state.religion || null,
@@ -313,6 +316,7 @@ export function StudentWizard() {
                 <Label className="mb-2 block">Home address</Label>
                 <Textarea value={state.home_address} onChange={(e) => set("home_address", e.target.value)} rows={2} />
               </div>
+              <Field type="email" label="Student email" v={state.student_email} onChange={(v) => set("student_email", v)} placeholder="student@example.com" />
               <Field label="Blood group" v={state.blood_group} onChange={(v) => set("blood_group", v)} placeholder="O+" />
               <Field label="Genotype" v={state.genotype} onChange={(v) => set("genotype", v)} placeholder="AA" />
               <div className="md:col-span-2">
