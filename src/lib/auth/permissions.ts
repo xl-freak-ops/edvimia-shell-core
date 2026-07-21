@@ -32,6 +32,7 @@ export type Permission =
   | "manage_finance"      // record fees, mark payments, apply discounts
   | "view_communication"  // /communication — announcements & messages
   | "send_communication"  // post announcements / send messages
+  | "homework"            // homework module — assign / view homework
   | "view_reports"        // /reports — school-wide report centre
   | "view_analytics"      // /analytics — cross-module analytics
   | "view_school_health"  // /school-health — school health dashboard
@@ -50,6 +51,7 @@ const ALL: Permission[] = [
   "view_timetable",
   "view_finance",     "manage_finance",
   "view_communication", "send_communication",
+  "homework",
   "view_reports",
   "view_analytics",
   "view_school_health",
@@ -120,26 +122,23 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
   ],
 
   // ── Academic staff ──────────────────────────────────────────────────────────
-  // Form teacher gets slightly broader class-management rights than subject teacher,
-  // but at the permission level both have the same module access.
+  // Form teacher manages a whole class — can see the student directory.
+  // Subject teacher only sees attendance/results for their subjects.
   form_teacher: [
     "view_dashboard",
-    "view_students",
+    "view_students",                            // class students directory
     "view_attendance",  "manage_attendance",
     "view_results",     "manage_results",
-    "view_timetable",
-    "view_communication", "send_communication",
-    "view_ai",
+    "view_communication", "send_communication", // announcements
+    "homework",
   ],
 
   subject_teacher: [
     "view_dashboard",
-    "view_students",
-    "view_attendance",  "manage_attendance",
-    "view_results",     "manage_results",
-    "view_timetable",
-    "view_communication", "send_communication",
-    "view_ai",
+    "view_attendance",  "manage_attendance",    // their classes only
+    "view_results",     "manage_results",       // their subjects only
+    "view_communication", "send_communication", // announcements
+    "homework",
   ],
 
   // ── Finance ─────────────────────────────────────────────────────────────────

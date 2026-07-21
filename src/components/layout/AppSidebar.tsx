@@ -38,6 +38,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { primaryRole, ROLE_SLUG, type AppRole } from "@/lib/auth/roles";
+import { hasPermission } from "@/lib/auth/permissions";
 
 // ── Nav definitions ────────────────────────────────────────
 
@@ -54,44 +55,46 @@ type NavGroup = {
   items: NavItem[];
 };
 
-const ADMIN_ROLES = new Set<AppRole>(["super_admin", "school_admin", "principal", "vice_principal"]);
+/**
+ * Build the staff nav dynamically from the user's actual permissions.
+ * Every menu item is gated — roles that lack the permission simply don't see it.
+ */
+const staffNav = (dashboardUrl: string, roles: AppRole[]): NavGroup[] => {
+  const can = (p: Parameters<typeof hasPermission>[1]) => hasPermission(roles, p);
 
-const staffNav = (dashboardUrl: string, role: AppRole | null): NavGroup[] => {
-  const isAdmin = role !== null && ADMIN_ROLES.has(role);
-  return [
-    {
-      label: "Workspace",
-      items: [
-        { title: "Dashboard", url: dashboardUrl, icon: LayoutDashboard, exact: true },
-        { title: "School", url: "/school", icon: Building2 },
-        { title: "Students", url: "/students", icon: GraduationCap },
-        { title: "Teachers", url: "/teachers", icon: Users },
-        { title: "Attendance", url: "/attendance", icon: CalendarCheck2 },
-        { title: "Results", url: "/results", icon: ClipboardList },
-        { title: "Timetable", url: "/timetable", icon: CalendarDays },
-        ...(isAdmin ? [{ title: "Finance", url: "/finance", icon: Wallet }] : []),
-        { title: "Communication", url: "/communication", icon: MessageSquare },
-        { title: "Reports", url: "/reports", icon: BarChart3 },
-      ],
-    },
-    {
-      label: "Intelligence",
-      items: [
-        { title: "Analytics", url: "/analytics", icon: LineChart },
-        { title: "School Health", url: "/school-health", icon: HeartPulse },
-        { title: "Edvi · AI Assistant", url: "/ai", icon: Sparkles, badge: "New" },
-      ],
-    },
+  const workspace: NavItem[] = [
+    { title: "Dashboard",      url: dashboardUrl,    icon: LayoutDashboard, exact: true },
+    ...(can("manage_school")      ? [{ title: "School",         url: "/school",        icon: Building2      }] as NavItem[] : []),
+    ...(can("view_students")      ? [{ title: "Students",       url: "/students",      icon: GraduationCap  }] as NavItem[] : []),
+    ...(can("view_teachers")      ? [{ title: "Teachers",       url: "/teachers",      icon: Users          }] as NavItem[] : []),
+    ...(can("view_attendance")    ? [{ title: "Attendance",     url: "/attendance",    icon: CalendarCheck2 }] as NavItem[] : []),
+    ...(can("view_results")       ? [{ title: "Results",        url: "/results",       icon: ClipboardList  }] as NavItem[] : []),
+    ...(can("view_timetable")     ? [{ title: "Timetable",      url: "/timetable",     icon: CalendarDays   }] as NavItem[] : []),
+    ...(can("view_finance")       ? [{ title: "Finance",        url: "/finance",       icon: Wallet         }] as NavItem[] : []),
+    ...(can("view_communication") ? [{ title: "Communication",  url: "/communication", icon: MessageSquare  }] as NavItem[] : []),
+    ...(can("view_reports")       ? [{ title: "Reports",        url: "/reports",       icon: BarChart3      }] as NavItem[] : []),
   ];
+
+  const intelligence: NavItem[] = [
+    ...(can("view_analytics")     ? [{ title: "Analytics",           url: "/analytics",     icon: LineChart  }] as NavItem[] : []),
+    ...(can("view_school_health") ? [{ title: "School Health",       url: "/school-health", icon: HeartPulse }] as NavItem[] : []),
+    ...(can("view_ai")            ? [{ title: "Edvi · AI Assistant", url: "/ai",            icon: Sparkles, badge: "New" }] as NavItem[] : []),
+  ];
+
+  const groups: NavGroup[] = [{ label: "Workspace", items: workspace }];
+  if (intelligence.length > 0) {
+    groups.push({ label: "Intelligence", items: intelligence });
+  }
+  return groups;
 };
 
 const parentNav = (dashboardUrl: string): NavGroup[] => [
   {
     label: "My Portal",
     items: [
-      { title: "Home", url: dashboardUrl, icon: Home, exact: true },
-      { title: "Announcements", url: "/communication", icon: Bell },
-      { title: "Messages", url: "/communication", icon: MessageSquare },
+      { title: "Home",          url: dashboardUrl,    icon: Home,        exact: true },
+      { title: "Announcements", url: "/communication", icon: Bell        },
+      { title: "Messages",      url: "/communication", icon: MessageSquare },
     ],
   },
 ];
@@ -100,18 +103,18 @@ const studentNav = (dashboardUrl: string): NavGroup[] => [
   {
     label: "My Portal",
     items: [
-      { title: "Home", url: dashboardUrl, icon: Home, exact: true },
-      { title: "My Homework", url: "/communication", icon: BookOpen },
-      { title: "Announcements", url: "/communication", icon: Bell },
-      { title: "Messages", url: "/communication", icon: MessageSquare },
+      { title: "Home",          url: dashboardUrl,    icon: Home,        exact: true },
+      { title: "My Homework",   url: "/communication", icon: BookOpen   },
+      { title: "Announcements", url: "/communication", icon: Bell        },
+      { title: "Messages",      url: "/communication", icon: MessageSquare },
     ],
   },
 ];
 
-function getNavGroups(role: AppRole | null, dashboardUrl: string): NavGroup[] {
+function getNavGroups(role: AppRole | null, roles: AppRole[], dashboardUrl: string): NavGroup[] {
   if (role === "parent") return parentNav(dashboardUrl);
   if (role === "student") return studentNav(dashboardUrl);
-  return staffNav(dashboardUrl, role);
+  return staffNav(dashboardUrl, roles);
 }
 
 // ── Component ──────────────────────────────────────────────
@@ -124,7 +127,7 @@ export function AppSidebar() {
   const { roles, signOut } = useAuth();
   const role = primaryRole(roles);
   const dashboardUrl = role ? `/dashboard/${ROLE_SLUG[role]}` : "/";
-  const navGroups = getNavGroups(role, dashboardUrl);
+  const navGroups = getNavGroups(role, roles, dashboardUrl);
 
   const isActive = (url: string, exact?: boolean) =>
     exact ? pathname === url : pathname === url || pathname.startsWith(url + "/");
