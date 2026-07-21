@@ -5158,6 +5158,11 @@ export type Database = {
         | "vice_principal"
         | "form_teacher"
         | "subject_teacher"
+        | "bursar"
+        | "account_officer"
+        | "librarian"
+        | "receptionist"
+        | "other_staff"
         | "parent"
         | "student"
       asset_condition: "new" | "good" | "fair" | "poor" | "damaged"
@@ -5406,6 +5411,11 @@ export const Constants = {
         "vice_principal",
         "form_teacher",
         "subject_teacher",
+        "bursar",
+        "account_officer",
+        "librarian",
+        "receptionist",
+        "other_staff",
         "parent",
         "student",
       ],

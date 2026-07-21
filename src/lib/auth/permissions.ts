@@ -240,6 +240,16 @@ export function hasPermission(roles: AppRole[], permission: Permission): boolean
   return false;
 }
 
+/** Check whether a user holds a specific role. */
+export function hasRole(roles: AppRole[], role: AppRole): boolean {
+  return roles.includes(role);
+}
+
+/** Check whether a user holds at least one of the given roles. */
+export function hasAnyRole(roles: AppRole[], ...allowed: AppRole[]): boolean {
+  return allowed.some((r) => roles.includes(r));
+}
+
 /** Return the permission required to access a given pathname, or null. */
 export function permissionForPath(pathname: string): Permission | null {
   for (const { prefix, permission } of ROUTE_PERMISSIONS) {
