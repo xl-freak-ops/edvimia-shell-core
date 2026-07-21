@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Wallet, Receipt, Layers, Settings2, TrendingDown, Lock } from "lucide-react";
+import { Wallet, Receipt, Layers, Settings2, TrendingDown } from "lucide-react";
+import { PermissionGate } from "@/components/auth/PermissionGate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AppShell } from "@/components/layout/AppShell";
@@ -23,11 +24,8 @@ export const Route = createFileRoute("/_authenticated/finance")({
   component: FinancePage,
 });
 
-const FINANCE_ROLES = new Set(["school_admin", "super_admin", "principal", "vice_principal"]);
-
 function FinancePage() {
-  const { school, roles } = useAuth();
-  const canViewFinance = roles.some((r) => FINANCE_ROLES.has(r));
+  const { school } = useAuth();
   const schoolId = school?.id ?? null;
   const schoolQ = useSchool(schoolId);
   const currency = (schoolQ.data as { currency?: string } | null)?.currency ?? "NGN";
@@ -42,25 +40,8 @@ function FinancePage() {
   const expenses = useExpenses(schoolId);
   const [receiptId, setReceiptId] = React.useState<string | null>(null);
 
-  if (!canViewFinance) {
-    return (
-      <AppShell>
-        <div className="flex h-[70vh] flex-col items-center justify-center gap-4 p-8 text-center">
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-muted">
-            <Lock className="h-7 w-7 text-muted-foreground" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">Access Restricted</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Finance information is only visible to school administrators.
-            </p>
-          </div>
-        </div>
-      </AppShell>
-    );
-  }
-
   return (
+    <PermissionGate permission="view_finance">
     <AppShell>
       <div className="mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -135,5 +116,6 @@ function FinancePage() {
         />
       </div>
     </AppShell>
+    </PermissionGate>
   );
 }

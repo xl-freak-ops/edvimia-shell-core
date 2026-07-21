@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
+import { PermissionGate } from "@/components/auth/PermissionGate";
 import { Loader2, Plus, Printer } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ function TimetablePage() {
   };
 
   return (
+    <PermissionGate permission="view_timetable">
     <AppShell>
       <div className="mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -168,5 +170,6 @@ function TimetablePage() {
         />
       </div>
     </AppShell>
+    </PermissionGate>
   );
 }

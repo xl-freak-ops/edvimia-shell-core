@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
+import { PermissionGate } from "@/components/auth/PermissionGate";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -48,6 +49,7 @@ function ReportPage() {
   }
 
   return (
+    <PermissionGate permission="view_results">
     <AppShell>
       <div className="mx-auto w-full max-w-6xl p-4 sm:p-6 lg:p-8">
         <ReportCard
@@ -62,5 +64,6 @@ function ReportPage() {
         />
       </div>
     </AppShell>
+    </PermissionGate>
   );
 }

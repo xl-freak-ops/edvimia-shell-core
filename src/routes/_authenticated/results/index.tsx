@@ -1,5 +1,6 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PermissionGate } from "@/components/auth/PermissionGate";
 import { BookOpen, ClipboardList, LineChart, Settings2, GraduationCap } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -39,6 +40,7 @@ function ResultsPage() {
   const termScores = useTermScores(schoolId, termId || null);
 
   return (
+    <PermissionGate permission="view_results">
     <AppShell>
       <div className="mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -93,6 +95,7 @@ function ResultsPage() {
         </Tabs>
       </div>
     </AppShell>
+    </PermissionGate>
   );
 }
 

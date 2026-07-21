@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MessageSquare, Bell, Megaphone } from "lucide-react";
+import { PermissionGate } from "@/components/auth/PermissionGate";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +50,7 @@ function CommunicationPage() {
   }
 
   return (
+    <PermissionGate permission="view_communication">
     <AppShell>
       <div className="mx-auto w-full max-w-[1400px] space-y-6 p-4 sm:p-6 lg:p-8">
         {/* Header */}
@@ -109,6 +111,7 @@ function CommunicationPage() {
         </Tabs>
       </div>
     </AppShell>
+    </PermissionGate>
   );
 }
 

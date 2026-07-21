@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Loader2, Mail, Phone, MapPin, Briefcase, GraduationCap, Send, Trash2 } from "lucide-react";
+import { PermissionGate } from "@/components/auth/PermissionGate";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
@@ -72,6 +73,7 @@ function StaffProfilePage() {
   }
 
   return (
+    <PermissionGate permission="view_teachers">
     <AppShell>
       <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex items-center justify-between">
@@ -198,6 +200,7 @@ function StaffProfilePage() {
         </Tabs>
       </div>
     </AppShell>
+    </PermissionGate>
   );
 }
 

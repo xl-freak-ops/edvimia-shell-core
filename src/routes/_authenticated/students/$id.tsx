@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Cake, Hash, Home, IdCard, Loader2, Mail, MapPin, Phone, Stethoscope } from "lucide-react";
+import { PermissionGate } from "@/components/auth/PermissionGate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +41,7 @@ function StudentProfilePage() {
   const fullName = [student.surname, student.first_name, student.middle_name].filter(Boolean).join(" ");
 
   return (
+    <PermissionGate permission="view_students">
     <div className="space-y-6">
       <Button variant="ghost" size="sm" className="gap-2" asChild>
         <Link to="/students"><ArrowLeft className="h-4 w-4" /> Back to directory</Link>
@@ -191,6 +193,7 @@ function StudentProfilePage() {
         </TabsContent>
       </Tabs>
     </div>
+    </PermissionGate>
   );
 }
 

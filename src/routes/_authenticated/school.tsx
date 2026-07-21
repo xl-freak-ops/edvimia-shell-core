@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { PermissionGate } from "@/components/auth/PermissionGate";
 import { AlertCircle, Building2, Calendar, Settings as SettingsIcon, BookOpen, Award, Sparkles, Loader2, ShieldCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ function SchoolPage() {
   };
 
   return (
+    <PermissionGate permission="manage_school">
     <div className="space-y-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -95,5 +97,6 @@ function SchoolPage() {
         <TabsContent value="roles" className="space-y-5"><RolesPanel schoolId={schoolId} /></TabsContent>
       </Tabs>
     </div>
+    </PermissionGate>
   );
 }
