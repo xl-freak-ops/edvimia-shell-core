@@ -36,6 +36,8 @@ export type Permission =
   | "view_reports"        // /reports — school-wide report centre
   | "view_analytics"      // /analytics — cross-module analytics
   | "view_school_health"  // /school-health — school health dashboard
+  | "view_library"        // /library — library catalogue & loans
+  | "manage_library"      // issue / return / manage books
   | "view_ai"             // /ai — Edvi AI assistant
   | "manage_school"       // /school — school settings & configuration
   | "manage_roles";       // assign / revoke roles (role management)
@@ -52,6 +54,7 @@ const ALL: Permission[] = [
   "view_finance",     "manage_finance",
   "view_communication", "send_communication",
   "homework",
+  "view_library",     "manage_library",
   "view_reports",
   "view_analytics",
   "view_school_health",
@@ -142,40 +145,35 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
   ],
 
   // ── Finance ─────────────────────────────────────────────────────────────────
+  // Bursar has full finance access; account officer is read-only.
   bursar: [
     "view_dashboard",
-    "view_students",                    // for payment lookup
     "view_finance",     "manage_finance",
-    "view_communication",
-    "view_reports",
   ],
 
   account_officer: [
     "view_dashboard",
-    "view_students",
     "view_finance",                     // read-only finance
-    "view_communication",
-    "view_reports",
   ],
 
   // ── Library ─────────────────────────────────────────────────────────────────
+  // Library module is not yet built — permission is declared, no route yet.
   librarian: [
     "view_dashboard",
-    "view_students",                    // for borrowing lookups
-    "view_communication",
+    "view_library",     "manage_library",
   ],
 
   // ── Front desk ──────────────────────────────────────────────────────────────
+  // Receptionist handles admissions and new student registration.
   receptionist: [
     "view_dashboard",
-    "view_students",
-    "view_communication",
+    "view_students",    "manage_students",
   ],
 
   // ── Other staff ─────────────────────────────────────────────────────────────
+  // No module access by default; profile & settings always available via System nav.
   other_staff: [
     "view_dashboard",
-    "view_communication",
   ],
 
   // ── Parent portal ───────────────────────────────────────────────────────────
