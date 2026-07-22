@@ -92,9 +92,13 @@ const parentNav = (dashboardUrl: string): NavGroup[] => [
   {
     label: "My Portal",
     items: [
-      { title: "Home",          url: dashboardUrl,    icon: Home,        exact: true },
-      { title: "Announcements", url: "/communication", icon: Bell        },
-      { title: "Messages",      url: "/communication", icon: MessageSquare },
+      { title: "Home",          url: dashboardUrl,     icon: Home,          exact: true },
+      { title: "Results",       url: "/results",       icon: ClipboardList              },
+      { title: "Attendance",    url: "/attendance",    icon: CalendarCheck2             },
+      { title: "Fees",          url: "/finance",       icon: Wallet                     },
+      { title: "Homework",      url: "/communication", icon: BookOpen                   },
+      { title: "Announcements", url: "/communication", icon: Bell                       },
+      { title: "Messages",      url: "/communication", icon: MessageSquare              },
     ],
   },
 ];
@@ -103,10 +107,12 @@ const studentNav = (dashboardUrl: string): NavGroup[] => [
   {
     label: "My Portal",
     items: [
-      { title: "Home",          url: dashboardUrl,    icon: Home,        exact: true },
-      { title: "My Homework",   url: "/communication", icon: BookOpen   },
-      { title: "Announcements", url: "/communication", icon: Bell        },
-      { title: "Messages",      url: "/communication", icon: MessageSquare },
+      { title: "Home",          url: dashboardUrl,     icon: Home,          exact: true },
+      { title: "Timetable",     url: "/timetable",     icon: CalendarDays               },
+      { title: "My Homework",   url: "/communication", icon: BookOpen                   },
+      { title: "Attendance",    url: "/attendance",    icon: CalendarCheck2             },
+      { title: "Results",       url: "/results",       icon: ClipboardList              },
+      { title: "Announcements", url: "/communication", icon: Bell                       },
     ],
   },
 ];

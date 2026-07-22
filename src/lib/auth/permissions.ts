@@ -177,22 +177,27 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
   ],
 
   // ── Parent portal ───────────────────────────────────────────────────────────
-  // Sees only their own children's data — enforced by RLS and component logic.
+  // Read-only access to their children's data — enforced by RLS + component logic.
+  // No manage_* permissions: parents cannot edit academic records.
   parent: [
     "view_dashboard",
-    "view_results",
-    "view_timetable",
-    "view_finance",
-    "view_communication",
+    "view_results",                     // children's results (read-only)
+    "view_attendance",                  // children's attendance (read-only)
+    "view_finance",                     // fees & invoices
+    "homework",                         // view homework
+    "view_communication",               // announcements + messages
   ],
 
   // ── Student portal ──────────────────────────────────────────────────────────
-  // Sees only their own records — enforced by RLS and component logic.
+  // Read-only access to own records — enforced by RLS + component logic.
+  // No manage_* permissions: students cannot edit any school data.
   student: [
     "view_dashboard",
-    "view_results",
     "view_timetable",
-    "view_communication",
+    "homework",                         // view homework
+    "view_attendance",                  // own attendance (read-only)
+    "view_results",                     // own results (read-only)
+    "view_communication",               // announcements
   ],
 };
 
