@@ -40,6 +40,15 @@ const ROLE_LABELS: Record<string, string> = {
   student: "Student",
 };
 
+type Category = "all" | "staff" | "parents" | "students";
+
+const CATEGORIES: { value: Category; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "staff", label: "Staff" },
+  { value: "parents", label: "Parents" },
+  { value: "students", label: "Students" },
+];
+
 function getCategory(role: string | null): "staff" | "parents" | "students" | "other" {
   if (!role) return "other";
   if (STAFF_ROLES.has(role)) return "staff";
@@ -50,6 +59,20 @@ function getCategory(role: string | null): "staff" | "parents" | "students" | "o
 
 function roleLabel(role: string | null) {
   return role ? (ROLE_LABELS[role] ?? role) : "Unknown";
+}
+
+function displayName(m: SchoolMember) {
+  return m.full_name?.trim() || m.email || m.id;
+}
+
+function matchesSearch(m: SchoolMember, search: string) {
+  if (!search) return true;
+  const q = search.toLowerCase();
+  return (
+    (m.full_name ?? "").toLowerCase().includes(q) ||
+    (m.email ?? "").toLowerCase().includes(q) ||
+    roleLabel(m.role).toLowerCase().includes(q)
+  );
 }
 
 // ── Component ──────────────────────────────────────────────
@@ -64,6 +87,9 @@ interface Props {
 
 export function UserSearchCombobox({ schoolId, excludeId, value, onChange }: Props) {
   const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState("");
+  const [category, setCategory] = React.useState<Category>("all");
+
   const { data: members = [], isLoading } = useSchoolMembers(schoolId);
 
   const eligible = React.useMemo(
@@ -71,37 +97,41 @@ export function UserSearchCombobox({ schoolId, excludeId, value, onChange }: Pro
     [members, excludeId],
   );
 
-  const selected = eligible.find((m) => m.id === value) ?? null;
+  const filtered = React.useMemo(() => {
+    return eligible.filter((m) => {
+      if (category !== "all" && getCategory(m.role) !== category) return false;
+      return matchesSearch(m, search);
+    });
+  }, [eligible, category, search]);
 
-  // Group members by category
+  // Group the filtered list for display
   const groups = React.useMemo(() => {
-    const staff: SchoolMember[] = [];
-    const parents: SchoolMember[] = [];
-    const students: SchoolMember[] = [];
-    const other: SchoolMember[] = [];
-
-    for (const m of eligible) {
-      const cat = getCategory(m.role);
-      if (cat === "staff") staff.push(m);
-      else if (cat === "parents") parents.push(m);
-      else if (cat === "students") students.push(m);
-      else other.push(m);
+    if (category !== "all") {
+      // Single group when a specific category is selected
+      return [{ label: CATEGORIES.find((c) => c.value === category)!.label, members: filtered }];
     }
-
+    const staff = filtered.filter((m) => getCategory(m.role) === "staff");
+    const parents = filtered.filter((m) => getCategory(m.role) === "parents");
+    const students = filtered.filter((m) => getCategory(m.role) === "students");
+    const other = filtered.filter((m) => getCategory(m.role) === "other");
     return [
       { label: "Staff", members: staff },
       { label: "Parents", members: parents },
       { label: "Students", members: students },
       { label: "Other", members: other },
     ].filter((g) => g.members.length > 0);
-  }, [eligible]);
+  }, [filtered, category]);
 
-  function displayName(m: SchoolMember) {
-    return m.full_name?.trim() || m.email || m.id;
+  const selected = eligible.find((m) => m.id === value) ?? null;
+
+  function handleSelect(member: SchoolMember) {
+    onChange(member.id, displayName(member));
+    setSearch("");
+    setOpen(false);
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(""); }}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -123,56 +153,69 @@ export function UserSearchCombobox({ schoolId, excludeId, value, onChange }: Pro
               </span>
             </span>
           ) : (
-            <span className="text-muted-foreground">Search by name or role…</span>
+            <span className="text-muted-foreground">Select recipient…</span>
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
 
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command
-          filter={(value, search) => {
-            // value is member.id; find the member and search against name + role
-            const m = eligible.find((m) => m.id === value);
-            if (!m) return 0;
-            const haystack = [m.full_name, m.email, roleLabel(m.role)]
-              .filter(Boolean)
-              .join(" ")
-              .toLowerCase();
-            return haystack.includes(search.toLowerCase()) ? 1 : 0;
-          }}
-        >
-          <CommandInput placeholder="Search name or role…" />
+        {/* Category filter tabs */}
+        <div className="flex gap-1 border-b px-2 pt-2 pb-1.5">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              type="button"
+              onClick={() => setCategory(cat.value)}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                category === cat.value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Search + results — shouldFilter=false so we control filtering */}
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Search by name or role…"
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList>
-            <CommandEmpty>No members found.</CommandEmpty>
-            {groups.map((group) => (
-              <CommandGroup key={group.label} heading={group.label}>
-                {group.members.map((m) => (
-                  <CommandItem
-                    key={m.id}
-                    value={m.id}
-                    onSelect={() => {
-                      onChange(m.id, displayName(m));
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4 shrink-0",
-                        value === m.id ? "opacity-100" : "opacity-0",
-                      )}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <span className="block truncate">{displayName(m)}</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {roleLabel(m.role)}
-                        {m.email && m.full_name ? ` · ${m.email}` : ""}
-                      </span>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ))}
+            {filtered.length === 0 ? (
+              <CommandEmpty>No members found.</CommandEmpty>
+            ) : (
+              groups.map((group) => (
+                <CommandGroup key={group.label} heading={group.label}>
+                  {group.members.map((m) => (
+                    <CommandItem
+                      key={m.id}
+                      value={m.id}
+                      onSelect={() => handleSelect(m)}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4 shrink-0",
+                          value === m.id ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className="block truncate text-sm">{displayName(m)}</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {roleLabel(m.role)}
+                          {m.email && m.full_name ? ` · ${m.email}` : ""}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
