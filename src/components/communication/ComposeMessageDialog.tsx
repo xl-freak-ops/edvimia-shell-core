@@ -17,9 +17,10 @@ import {
 } from "@/components/ui/select";
 
 import { MESSAGE_TYPES, useSendMessage } from "@/lib/communication/hooks";
+import { UserSearchCombobox } from "./UserSearchCombobox";
 
 const schema = z.object({
-  recipient_id: z.string().min(1, "Recipient ID is required"),
+  recipient_id: z.string().min(1, "Please select a recipient"),
   subject: z.string().optional(),
   body: z.string().min(2, "Message body is required"),
   message_type: z.string(),
@@ -30,6 +31,7 @@ type FormValues = z.infer<typeof schema>;
 interface Props {
   schoolId: string;
   senderId: string;
+  /** When set (e.g. reply), the picker is pre-filled and locked. */
   defaultRecipientId?: string;
   defaultSubject?: string;
   onSuccess?: () => void;
@@ -83,25 +85,34 @@ export function ComposeMessageDialog({
     }
   }
 
+  // When replying, the recipient is already known — lock the field.
+  const isReply = !!defaultRecipientId;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children ?? <Button size="sm">New Message</Button>}</DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>New Message</DialogTitle>
+          <DialogTitle>{isReply ? "Reply" : "New Message"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Recipient */}
           <div className="space-y-1.5">
-            <Label htmlFor="msg-recipient">Recipient User ID *</Label>
-            <Input
-              id="msg-recipient"
-              placeholder="Paste recipient's user ID…"
-              {...form.register("recipient_id")}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              Ask your school admin for staff user IDs, or reply to a message to auto-fill.
-            </p>
+            <Label>To *</Label>
+            {isReply ? (
+              // Reply: recipient is pre-set; just show a read-only badge
+              <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                Replying to sender
+              </div>
+            ) : (
+              <UserSearchCombobox
+                schoolId={schoolId}
+                excludeId={senderId}
+                value={form.watch("recipient_id")}
+                onChange={(id) => form.setValue("recipient_id", id, { shouldValidate: true })}
+              />
+            )}
             {form.formState.errors.recipient_id && (
               <p className="text-xs text-destructive">
                 {form.formState.errors.recipient_id.message}
@@ -109,11 +120,13 @@ export function ComposeMessageDialog({
             )}
           </div>
 
+          {/* Subject */}
           <div className="space-y-1.5">
             <Label htmlFor="msg-subject">Subject (optional)</Label>
             <Input id="msg-subject" placeholder="Subject…" {...form.register("subject")} />
           </div>
 
+          {/* Type */}
           <div className="space-y-1.5">
             <Label>Type</Label>
             <Select
@@ -129,6 +142,7 @@ export function ComposeMessageDialog({
             </Select>
           </div>
 
+          {/* Body */}
           <div className="space-y-1.5">
             <Label htmlFor="msg-body">Message *</Label>
             <Textarea

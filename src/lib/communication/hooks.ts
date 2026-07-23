@@ -119,6 +119,16 @@ export const ROLE_TARGETS = [
   { value: "student", label: "Students" },
 ];
 
+// ── School member type ─────────────────────────────────────
+
+export interface SchoolMember {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  role: string | null;
+}
+
 // ── Query key factories ────────────────────────────────────
 
 export const communicationKeys = {
@@ -256,6 +266,48 @@ export function useMarkAnnouncementRead(userId: string | null | undefined) {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["communication"] }),
+  });
+}
+
+// ── School members hook ────────────────────────────────────
+
+/**
+ * Fetches all profiles in the school and merges their roles from user_roles.
+ * Two queries are needed because user_roles.user_id references auth.users,
+ * not public.profiles, so PostgREST cannot auto-embed across that boundary.
+ */
+export function useSchoolMembers(schoolId: string | null | undefined) {
+  return useQuery({
+    enabled: !!schoolId,
+    queryKey: ["school-members", schoolId],
+    queryFn: async () => {
+      const { data: profiles, error: pe } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .eq("school_id", schoolId!);
+      if (pe) throw pe;
+      if (!profiles || profiles.length === 0) return [] as SchoolMember[];
+
+      const ids = profiles.map((p) => p.id);
+      const { data: roles, error: re } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("school_id", schoolId!)
+        .in("user_id", ids);
+      if (re) throw re;
+
+      const roleMap = new Map<string, string>();
+      (roles ?? []).forEach((r) => roleMap.set(r.user_id, r.role));
+
+      return profiles.map((p) => ({
+        id: p.id,
+        full_name: p.full_name,
+        email: p.email,
+        avatar_url: p.avatar_url,
+        role: roleMap.get(p.id) ?? null,
+      })) as SchoolMember[];
+    },
+    staleTime: 5 * 60 * 1000, // 5 min — member list changes infrequently
   });
 }
 
