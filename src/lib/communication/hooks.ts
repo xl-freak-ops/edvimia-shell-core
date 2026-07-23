@@ -272,40 +272,26 @@ export function useMarkAnnouncementRead(userId: string | null | undefined) {
 // ── School members hook ────────────────────────────────────
 
 /**
- * Fetches all profiles in the school and merges their roles from user_roles.
- * Two queries are needed because user_roles.user_id references auth.users,
- * not public.profiles, so PostgREST cannot auto-embed across that boundary.
+ * Fetches all school members via the get_school_members() SECURITY DEFINER RPC.
+ *
+ * Why RPC instead of direct table queries:
+ *   1. profiles.school_id is NULL at signup (trigger doesn't set it), so
+ *      querying profiles WHERE school_id = X always returns nothing.
+ *   2. The profiles RLS only allows users to read their own row, blocking
+ *      cross-member lookups entirely.
+ *   The RPC runs as a privileged role, joins user_roles (always has school_id)
+ *   with profiles, and gates access with is_school_member() on the caller.
  */
 export function useSchoolMembers(schoolId: string | null | undefined) {
   return useQuery({
     enabled: !!schoolId,
     queryKey: ["school-members", schoolId],
     queryFn: async () => {
-      const { data: profiles, error: pe } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, avatar_url")
-        .eq("school_id", schoolId!);
-      if (pe) throw pe;
-      if (!profiles || profiles.length === 0) return [] as SchoolMember[];
-
-      const ids = profiles.map((p) => p.id);
-      const { data: roles, error: re } = await supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .eq("school_id", schoolId!)
-        .in("user_id", ids);
-      if (re) throw re;
-
-      const roleMap = new Map<string, string>();
-      (roles ?? []).forEach((r) => roleMap.set(r.user_id, r.role));
-
-      return profiles.map((p) => ({
-        id: p.id,
-        full_name: p.full_name,
-        email: p.email,
-        avatar_url: p.avatar_url,
-        role: roleMap.get(p.id) ?? null,
-      })) as SchoolMember[];
+      const { data, error } = await supabase.rpc("get_school_members", {
+        _school_id: schoolId!,
+      });
+      if (error) throw error;
+      return (data ?? []) as SchoolMember[];
     },
     staleTime: 5 * 60 * 1000, // 5 min — member list changes infrequently
   });
