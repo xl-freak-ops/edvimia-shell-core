@@ -62,21 +62,21 @@ AS $$
   -- Students already returned via Branch 1 (they have a user_roles row) are
   -- excluded to avoid duplicates.
   SELECT
-    COALESCE(s.user_id, s.id)                 AS id,
+    s.user_id                                 AS id,
     (s.first_name || ' ' || s.surname)::text  AS full_name,
     s.email,
     s.photo_url                               AS avatar_url,
     'student'::text                           AS role
   FROM public.students s
-  WHERE s.school_id = _school_id
-    AND s.status    = 'active'
+  WHERE s.school_id  = _school_id
+    AND s.status     = 'active'
+    AND s.user_id   IS NOT NULL          -- must have a portal account to receive messages
     AND public.is_school_member(_school_id)
     AND NOT EXISTS (
       SELECT 1
       FROM   public.user_roles ur3
       WHERE  ur3.school_id = _school_id
-        AND  ur3.user_id   = s.user_id   -- only skip when user_id is set
-        AND  s.user_id IS NOT NULL
+        AND  ur3.user_id   = s.user_id
     )
 
   ORDER BY full_name;
