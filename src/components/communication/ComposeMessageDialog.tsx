@@ -38,13 +38,18 @@ interface Props {
   recentContactIds?: string[];
   onSuccess?: () => void;
   children?: React.ReactNode;
+  /** Controlled open state — omit to let the dialog manage itself */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ComposeMessageDialog({
   schoolId, senderId, defaultRecipientId, defaultSubject,
-  recentContactIds = [], onSuccess, children,
+  recentContactIds = [], onSuccess, children, open: openProp, onOpenChange,
 }: Props) {
-  const [open, setOpen] = React.useState(false);
+  const [openInternal, setOpenInternal] = React.useState(false);
+  const open    = openProp !== undefined ? openProp : openInternal;
+  const setOpen = (v: boolean) => { setOpenInternal(v); onOpenChange?.(v); };
   const send = useSendMessage(schoolId);
 
   const form = useForm<FormValues>({

@@ -108,8 +108,9 @@ function nameInitials(m: SchoolMember) {
 
 function MemberRow({ m, isSelected }: { m: SchoolMember; isSelected: boolean }) {
   const palette = avatarPalette(m.id);
+  const noPortal = m.has_portal === false;
   return (
-    <div className="flex items-center gap-2.5 w-full">
+    <div className={cn("flex items-center gap-2.5 w-full", noPortal && "opacity-50")}>
       <div className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
         palette.bg, palette.text,
@@ -117,10 +118,18 @@ function MemberRow({ m, isSelected }: { m: SchoolMember; isSelected: boolean }) 
         {nameInitials(m)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium leading-tight truncate">{memberDisplayName(m)}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium leading-tight truncate">{memberDisplayName(m)}</p>
+          {noPortal && (
+            <span className="shrink-0 rounded px-1 py-0 text-[10px] font-medium bg-muted text-muted-foreground border">
+              No portal
+            </span>
+          )}
+        </div>
         <p className="text-[11px] text-muted-foreground leading-tight truncate">
           {roleLabel(m.role)}
           {m.email && m.full_name ? ` · ${m.email}` : ""}
+          {noPortal ? " · Can't be messaged" : ""}
         </p>
       </div>
       <Check className={cn("h-4 w-4 shrink-0 text-primary", isSelected ? "opacity-100" : "opacity-0")} />
@@ -190,6 +199,7 @@ export function UserSearchCombobox({
   }, [filtered, category]);
 
   function handleSelect(m: SchoolMember) {
+    if (m.has_portal === false) return; // no portal account — cannot receive messages
     onChange(m.id, memberDisplayName(m));
     setSearch("");
     setOpen(false);
@@ -300,6 +310,7 @@ export function UserSearchCombobox({
                       key={m.id}
                       value={m.id}
                       onSelect={() => handleSelect(m)}
+                      disabled={m.has_portal === false}
                       className="py-2"
                     >
                       <MemberRow m={m} isSelected={value === m.id} />

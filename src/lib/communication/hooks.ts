@@ -127,6 +127,8 @@ export interface SchoolMember {
   email: string | null;
   avatar_url: string | null;
   role: string | null;
+  /** false for students who have a record but no portal account (cannot receive in-app messages) */
+  has_portal: boolean;
 }
 
 // ── Query key factories ────────────────────────────────────
@@ -287,11 +289,12 @@ export function useSchoolMembers(schoolId: string | null | undefined) {
     enabled: !!schoolId,
     queryKey: ["school-members", schoolId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_school_members", {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc("get_school_members", {
         _school_id: schoolId!,
       });
       if (error) throw error;
-      return (data ?? []) as SchoolMember[];
+      return (data ?? []) as unknown as SchoolMember[];
     },
     staleTime: 5 * 60 * 1000, // 5 min — member list changes infrequently
   });

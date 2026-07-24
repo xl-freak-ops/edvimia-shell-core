@@ -12,6 +12,7 @@ import {
   Eye,
   Trash2,
   Users as UsersIcon,
+  MessageCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { exportStaffCsv, exportStaffExcel } from "@/lib/staff/export";
 import { useDeleteStaff } from "@/lib/staff/hooks";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { ComposeMessageDialog } from "@/components/communication/ComposeMessageDialog";
 
 type Row = Tables<"staff">;
 
@@ -47,7 +49,7 @@ const PAGE_SIZE = 15;
 
 export function StaffDirectory({ staff }: { staff: Row[] }) {
   const navigate = useNavigate();
-  const { school } = useAuth();
+  const { school, userId } = useAuth();
   const deleteStaff = useDeleteStaff(school?.id ?? "");
   const [q, setQ] = useState("");
   const [positionFilter, setPositionFilter] = useState<string>("all");
@@ -55,6 +57,7 @@ export function StaffDirectory({ staff }: { staff: Row[] }) {
   const [deptFilter, setDeptFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const [pendingDelete, setPendingDelete] = useState<Row | null>(null);
+  const [composeTarget, setComposeTarget] = useState<{ recipientId: string; name: string } | null>(null);
 
   async function handleDelete() {
     if (!pendingDelete) return;
@@ -254,6 +257,12 @@ export function StaffDirectory({ staff }: { staff: Row[] }) {
                                 <Eye className="mr-2 h-4 w-4" /> View profile
                               </Link>
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={!s.user_id}
+                              onClick={() => s.user_id && setComposeTarget({ recipientId: s.user_id, name: s.full_name })}
+                            >
+                              <MessageCircle className="mr-2 h-4 w-4" /> Send message
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
@@ -288,6 +297,17 @@ export function StaffDirectory({ staff }: { staff: Row[] }) {
         )}
       </CardContent>
     </Card>
+
+    {composeTarget && school?.id && (
+      <ComposeMessageDialog
+        schoolId={school.id}
+        senderId={userId ?? ""}
+        defaultRecipientId={composeTarget.recipientId}
+        defaultSubject={`Message to ${composeTarget.name}`}
+        open={!!composeTarget}
+        onOpenChange={(v) => { if (!v) setComposeTarget(null); }}
+      />
+    )}
     </>
   );
 }

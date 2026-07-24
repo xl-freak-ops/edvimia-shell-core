@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  ArrowRightLeft, ArrowUpCircle, UserX, LogOut, GraduationCap, Archive, Trash2, MoreVertical, Pencil,
+  ArrowRightLeft, ArrowUpCircle, UserX, LogOut, GraduationCap, Archive, Trash2, MoreVertical, Pencil, MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useChangeStudentStatus, useDeleteStudent } from "@/lib/students/hooks";
+import { ComposeMessageDialog } from "@/components/communication/ComposeMessageDialog";
 import { useClasses } from "@/lib/school/hooks";
 import { StudentEditDialog } from "./StudentEditDialog";
 import type { Tables } from "@/integrations/supabase/types";
@@ -27,7 +28,7 @@ const canManage = (roles: string[]) =>
   roles.some((r) => ["super_admin", "school_admin", "principal", "vice_principal"].includes(r));
 
 export function StudentActionsMenu({ student }: { student: Student }) {
-  const { roles, school } = useAuth();
+  const { roles, school, userId } = useAuth();
   const navigate = useNavigate();
   const schoolId = school?.id ?? "";
   const { data: classes = [] } = useClasses(schoolId);
@@ -38,6 +39,7 @@ export function StudentActionsMenu({ student }: { student: Student }) {
   const [note, setNote] = useState("");
   const [targetClass, setTargetClass] = useState<string>("");
   const [editOpen, setEditOpen] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
 
   const isSuper = roles.includes("super_admin");
   const allowed = canManage(roles);
@@ -117,6 +119,12 @@ export function StudentActionsMenu({ student }: { student: Student }) {
             <Pencil className="mr-2 h-4 w-4" /> Edit profile
           </DropdownMenuItem>
           <DropdownMenuItem
+            disabled={!student.user_id}
+            onClick={() => student.user_id && setComposeOpen(true)}
+          >
+            <MessageCircle className="mr-2 h-4 w-4" /> Send message
+          </DropdownMenuItem>
+          <DropdownMenuItem
             disabled={!allowed}
             onClick={() => setKind("delete")}
             className="text-destructive focus:text-destructive"
@@ -127,6 +135,16 @@ export function StudentActionsMenu({ student }: { student: Student }) {
       </DropdownMenu>
 
       <StudentEditDialog student={student} open={editOpen} onOpenChange={setEditOpen} />
+
+      {student.user_id && (
+        <ComposeMessageDialog
+          schoolId={schoolId}
+          senderId={userId ?? ""}
+          defaultRecipientId={student.user_id}
+          open={composeOpen}
+          onOpenChange={setComposeOpen}
+        />
+      )}
 
       <Dialog open={kind !== null} onOpenChange={(o) => !o && close()}>
         <DialogContent>
